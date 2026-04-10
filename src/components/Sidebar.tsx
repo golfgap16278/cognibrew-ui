@@ -1,4 +1,4 @@
-export default function Sidebar() {
+export default function Sidebar({ onLogout }: { onLogout?: () => void }) {
   return (
     <aside className="fixed left-0 top-0 h-full flex flex-col items-center py-6 gap-4 bg-primary-container w-24 border-none font-manrope tracking-tight z-10 shadow-lg">
       <div className="mb-8 flex flex-col items-center gap-1">
@@ -29,7 +29,10 @@ export default function Sidebar() {
           <span className="text-[0.625rem] mt-1 font-bold">Settings</span>
         </a>
       </nav>
-      <button className="mt-auto flex flex-col items-center justify-center text-on-primary-container w-20 h-20 hover:text-on-error rounded-2xl transition-all">
+      <button 
+        onClick={onLogout} 
+        className="mt-auto flex flex-col items-center justify-center text-on-primary-container w-20 h-20 hover:text-error rounded-2xl transition-all"
+      >
         <span className="material-symbols-outlined text-2xl">logout</span>
         <span className="text-[0.625rem] mt-1 font-bold">Log Out</span>
       </button>
