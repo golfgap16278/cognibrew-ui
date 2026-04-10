@@ -38,7 +38,7 @@ export default function App() {
 
   // Fire-and-forget feedback to ML backend (never blocks UI)
   const sendFeedback = (type: string, customer: Customer, orderId?: string) => {
-    fetch('http://localhost:3001/api/feedback', {
+    fetch('http://localhost:3002/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -128,7 +128,7 @@ export default function App() {
 
   const handleCheckout = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/order', {
+      const response = await fetch('http://localhost:3002/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,7 +174,7 @@ export default function App() {
 
   useEffect(() => {
     // 1. Fetch static configurations (modifiers, customer database)
-    fetch('http://localhost:3001/api/config')
+    fetch('http://localhost:3002/api/config')
       .then(res => res.json())
       .then(data => {
         if (data.SWEETNESS_LEVELS) setSweetnessLevels(data.SWEETNESS_LEVELS);
@@ -188,7 +188,7 @@ export default function App() {
       .catch(err => console.error("Failed to fetch config:", err));
 
     // 2. Fetch standard menu
-    fetch('http://localhost:3001/api/menu')
+    fetch('http://localhost:3002/api/menu')
       .then(res => res.json())
       .then(data => {
         if (data.menuItems) setMenuItems(data.menuItems);
@@ -197,7 +197,7 @@ export default function App() {
       .catch(err => console.error("Failed to fetch menu:", err));
 
     // 3. Fetch popular items (for guest recommendations)
-    fetch('http://localhost:3001/api/popular')
+    fetch('http://localhost:3002/api/popular')
       .then(res => res.json())
       .then(data => {
         if (data.popularItems) setPopularItems(data.popularItems);
@@ -231,7 +231,7 @@ export default function App() {
 
     const pollDetection = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/detect');
+        const response = await fetch('http://localhost:3002/api/detect');
         const data = await response.json();
         if (data.customer) {
           setIsFaceDetecting(true);

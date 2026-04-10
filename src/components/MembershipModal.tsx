@@ -55,7 +55,7 @@ export default function MembershipModal({
             <div className="p-6">
               <div className="bg-stone-50 border border-stone-200 rounded-2xl p-4 mb-2 text-center h-16 flex items-center justify-center">
                 <span className={`font-mono text-2xl tracking-widest ${phoneNumber ? 'text-stone-800' : 'text-stone-300'}`}>
-                  {phoneNumber || '___-____'}
+                  {phoneNumber || '____'}
                 </span>
               </div>
 
@@ -68,7 +68,7 @@ export default function MembershipModal({
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                   <button
                     key={num}
-                    onClick={() => onSetPhoneNumber(phoneNumber.length < 10 ? phoneNumber + num : phoneNumber)}
+                    onClick={() => onSetPhoneNumber(phoneNumber.length < 4 ? phoneNumber + num : phoneNumber)}
                     className="h-14 bg-stone-100 rounded-2xl font-headline font-bold text-2xl text-stone-700 hover:bg-stone-200 active:scale-95 transition-all focus:outline-none"
                   >
                     {num}
@@ -81,7 +81,7 @@ export default function MembershipModal({
                   CLEAR
                 </button>
                 <button
-                  onClick={() => onSetPhoneNumber(phoneNumber.length < 10 ? phoneNumber + '0' : phoneNumber)}
+                  onClick={() => onSetPhoneNumber(phoneNumber.length < 4 ? phoneNumber + '0' : phoneNumber)}
                   className="h-14 bg-stone-100 rounded-2xl font-headline font-bold text-2xl text-stone-700 hover:bg-stone-200 active:scale-95 transition-all focus:outline-none"
                 >
                   0
@@ -102,7 +102,7 @@ export default function MembershipModal({
                     onSetLinkedCustomer(found);
                     onClose();
                   } else {
-                    onSetPhoneError('Member not found. Try 5550101');
+                    onSetPhoneError('Member not found. Try 1111');
                   }
                 }}
                 disabled={phoneNumber.length === 0}

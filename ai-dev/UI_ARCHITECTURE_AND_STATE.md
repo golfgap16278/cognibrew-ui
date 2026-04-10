@@ -10,7 +10,7 @@ The application is split into four main horizontal zones:
 1. **Left Sidebar (`<aside>`):** Static navigation (Register, History, Kitchen, Customers, Settings). Fixed-positioned, `w-24` (96px at baseline).
 2. **AI Insights Panel (`<section>`):** The dynamic "Customer Insight Card" area. Instead of standard HTTP polling, this section utilizes a **SignalR hook** directly in the React frontend to listen for near real-time camera detections. It renders a queue of recognized customers or guest profiles the moment an event is broadcasted. Fixed width `w-[26.25rem]` with `min-w-[21.25rem]` floor.
 3. **Menu Panel (`<section>`):** A categorized menu grid displaying drink and food categories, with drill-down into individual items. Uses `flex-1` to fill remaining horizontal space.
-4. **Order Panel (`<section>`):** The current order cart, showing line items, modifiers, totals, and checkout. Fixed width `w-80` (320px at baseline).
+4. **Order Panel (`<section>`):** The current order cart, showing line items, modifiers, totals, and checkout. Fixed width `w-[26.25rem]` to visually balance with the AI Insights panel.
 
 ## Responsive Scaling
 The UI is designed at a **1440×900 (16:10) baseline** resolution. All sizing uses `rem` units, and the root font-size scales proportionally with viewport dimensions:

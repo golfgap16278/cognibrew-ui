@@ -24,7 +24,7 @@ export default function OrderPanel({
   onCheckout,
 }: OrderPanelProps) {
   return (
-    <section className="w-80 bg-white rounded-3xl shadow-lg border border-stone-200 flex flex-col shrink-0 overflow-hidden">
+    <section className="w-[26.25rem] bg-white rounded-3xl shadow-lg border border-stone-200 flex flex-col shrink-0 overflow-hidden">
       <div className="p-6 border-b border-stone-100 bg-stone-50/50">
         <div className="flex justify-between items-center mb-1">
           <h2 className="font-headline font-bold text-xl text-stone-800 truncate pr-2">

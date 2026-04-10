@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 
-const PORT = 3001;
+const PORT = 3002;
 // The local network IP of your Edge Machine
 const EDGE_API_URL = process.env.EDGE_API_URL || 'http://192.168.1.50:8000';
 
@@ -17,132 +17,6 @@ const SWEETNESS_LEVELS = ["No Sugar", "Less Sugar", "Regular", "More Sugar"];
 const MILK_TYPES = ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"];
 const BEAN_TYPES = ["House Blend", "Single Origin", "Decaf"];
 
-const customerDatabase = [
-  {
-    id: '1',
-    orderId: '184',
-    name: 'Sarah Johnson',
-    firstName: 'Sarah',
-    status: 'Gold Member',
-    points: 4200,
-    rank: 'Gold',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
-    usualOrder: 'Americano',
-    usualOrderIcon: 'local_cafe',
-    usualOrderId: '5',
-    usualSweetness: 'No Sugar',
-    upsell: 'Croissant',
-    upsellId: '9',
-    greeting: '"Hey Sarah! Welcome back. Shall we get your usual Americano started, and maybe pair it with a fresh Croissant today?"',
-    phone: '555-0101'
-  },
-  {
-    id: '2',
-    orderId: '185',
-    name: 'Guest Customer',
-    firstName: 'Guest',
-    status: 'Unregistered Profile',
-    points: 0,
-    rank: 'Guest',
-    image: '',
-    usualOrder: '',
-    usualOrderIcon: '',
-    upsell: '',
-    greeting: '',
-    isGuest: true,
-    isRecommendationDown: true
-  },
-  {
-    id: '3',
-    orderId: '186',
-    name: 'David Chen',
-    firstName: 'David',
-    status: 'Silver Member',
-    points: 1500,
-    rank: 'Silver',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
-    usualOrder: 'Latte',
-    usualOrderIcon: 'local_cafe',
-    usualOrderId: '1',
-    usualSweetness: 'Less Sugar',
-    upsell: 'Blueberry Muffin',
-    upsellId: '10',
-    greeting: '"Hi David! The usual Latte today?"',
-    phone: '555-0102',
-    isRecommendationDown: true
-  },
-  {
-    id: '4',
-    orderId: '187',
-    name: 'Guest Customer',
-    firstName: 'Guest',
-    status: 'Unregistered Profile',
-    points: 0,
-    rank: 'Guest',
-    image: '',
-    usualOrder: '',
-    usualOrderIcon: '',
-    upsell: '',
-    greeting: '',
-    isGuest: true
-  },
-  {
-    id: '5',
-    orderId: '188',
-    name: 'Emma Wilson',
-    firstName: 'Emma',
-    status: 'New Customer',
-    points: 200,
-    rank: 'New',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
-    usualOrder: 'Mocha Frappe',
-    usualOrderIcon: 'blender',
-    usualOrderId: '15',
-    usualSweetness: 'More Sugar',
-    upsell: 'Pumpkin Bread',
-    upsellId: '11',
-    greeting: '"Welcome back Emma! Would you like to try our Pumpkin Bread with your Frappe?"',
-    phone: '555-0103'
-  },
-  {
-    id: '6',
-    orderId: '189',
-    name: 'Michael Chang',
-    firstName: 'Michael',
-    status: 'Regular',
-    points: 800,
-    rank: 'Regular',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
-    usualOrder: 'Cold Brew',
-    usualOrderIcon: 'ac_unit',
-    usualOrderId: '7',
-    usualSweetness: 'Regular',
-    upsell: 'Peppermint Mocha',
-    upsellId: '12',
-    greeting: '"Morning Michael! Cold brew to start the day?"',
-    phone: '555-0104'
-  }
-];
-
-const menuItems = [
-    { id: '1', name: 'Latte', price: 4.50, category: 'Hot Drinks', icon: 'local_cafe' },
-    { id: '2', name: 'Cappuccino', price: 4.50, category: 'Hot Drinks', icon: 'local_cafe' },
-    { id: '3', name: 'Flat White', price: 4.25, category: 'Hot Drinks', icon: 'local_cafe' },
-    { id: '4', name: 'Cortado', price: 4.00, category: 'Hot Drinks', icon: 'local_cafe' },
-    { id: '5', name: 'Americano', price: 3.50, category: 'Hot Drinks', icon: 'local_cafe' },
-    { id: '6', name: 'Iced Latte', price: 5.00, category: 'Iced Drinks', icon: 'ac_unit' },
-    { id: '7', name: 'Cold Brew', price: 4.50, category: 'Iced Drinks', icon: 'ac_unit' },
-    { id: '8', name: 'Iced Matcha', price: 5.50, category: 'Iced Drinks', icon: 'ac_unit' },
-    { id: '15', name: 'Mocha Frappe', price: 6.00, category: 'Frappe', icon: 'blender' },
-    { id: '16', name: 'Caramel Frappe', price: 6.00, category: 'Frappe', icon: 'blender' },
-    { id: '9', name: 'Croissant', price: 3.50, category: 'Pastries', icon: 'bakery_dining' },
-    { id: '10', name: 'Blueberry Muffin', price: 3.00, category: 'Pastries', icon: 'bakery_dining' },
-    { id: '11', name: 'Pumpkin Bread', price: 4.00, category: 'Seasonal', icon: 'eco' },
-    { id: '12', name: 'Peppermint Mocha', price: 5.50, category: 'Seasonal', icon: 'eco' },
-    { id: '13', name: 'House Blend (12oz)', price: 18.00, category: 'Coffee Beans', icon: 'shopping_bag' },
-    { id: '14', name: 'Single Origin (12oz)', price: 24.00, category: 'Coffee Beans', icon: 'shopping_bag' },
-];
-
 const menuCategories = [
     { name: 'Hot Drinks', icon: 'local_cafe' },
     { name: 'Iced Drinks', icon: 'ac_unit' },
@@ -152,6 +26,123 @@ const menuCategories = [
     { name: 'Coffee Beans', icon: 'shopping_bag' },
 ];
 
+const menuItems = [
+    { id: '1', name: 'Latte', price: 4.50, category: 'Hot Drinks' },
+    { id: '2', name: 'Cappuccino', price: 4.50, category: 'Hot Drinks' },
+    { id: '3', name: 'Flat White', price: 4.25, category: 'Hot Drinks' },
+    { id: '4', name: 'Cortado', price: 4.00, category: 'Hot Drinks' },
+    { id: '5', name: 'Americano', price: 3.50, category: 'Hot Drinks' },
+    { id: '6', name: 'Iced Latte', price: 5.00, category: 'Iced Drinks' },
+    { id: '7', name: 'Cold Brew', price: 4.50, category: 'Iced Drinks' },
+    { id: '8', name: 'Iced Matcha', price: 5.50, category: 'Iced Drinks' },
+    { id: '15', name: 'Mocha Frappe', price: 6.00, category: 'Frappe' },
+    { id: '16', name: 'Caramel Frappe', price: 6.00, category: 'Frappe' },
+    { id: '9', name: 'Croissant', price: 3.50, category: 'Pastries' },
+    { id: '10', name: 'Blueberry Muffin', price: 3.00, category: 'Pastries' },
+    { id: '11', name: 'Pumpkin Bread', price: 4.00, category: 'Seasonal' },
+    { id: '12', name: 'Peppermint Mocha', price: 5.50, category: 'Seasonal' },
+    { id: '13', name: 'House Blend (12oz)', price: 18.00, category: 'Coffee Beans' },
+    { id: '14', name: 'Single Origin (12oz)', price: 24.00, category: 'Coffee Beans' },
+].map(item => ({
+    ...item,
+    icon: menuCategories.find(c => c.name === item.category)?.icon || 'star'
+}));
+
+const customerDatabase = [
+    {
+        id: '1',
+        name: 'Sarah Johnson',
+        firstName: 'Sarah',
+        status: 'Gold Member',
+        points: 4200,
+        rank: 'Gold',
+        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
+        usualOrderId: '5',
+        usualSweetness: 'No Sugar',
+        upsellId: '9',
+        greeting: '"Hey Sarah! Welcome back. Shall we get your usual Americano started, and maybe pair it with a fresh Croissant today?"',
+        phone: '1111'
+    },
+    {
+        id: '2',
+        name: 'Guest Customer',
+        firstName: 'Guest',
+        status: 'Unregistered Profile',
+        points: 0,
+        rank: 'Guest',
+        image: '',
+        greeting: '',
+        isGuest: true,
+        isRecommendationDown: true
+    },
+    {
+        id: '3',
+        name: 'David Chen',
+        firstName: 'David',
+        status: 'Silver Member',
+        points: 1500,
+        rank: 'Silver',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
+        usualOrderId: '1',
+        usualSweetness: 'Less Sugar',
+        upsellId: '10',
+        greeting: '"Hi David! The usual Latte today?"',
+        phone: '0102',
+        isRecommendationDown: true
+    },
+    {
+        id: '4',
+        name: 'Guest Customer',
+        firstName: 'Guest',
+        status: 'Unregistered Profile',
+        points: 0,
+        rank: 'Guest',
+        image: '',
+        greeting: '',
+        isGuest: true
+    },
+    {
+        id: '5',
+        name: 'Emma Wilson',
+        firstName: 'Emma',
+        status: 'New Customer',
+        points: 200,
+        rank: 'New',
+        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
+        usualOrderId: '15',
+        usualSweetness: 'More Sugar',
+        upsellId: '11',
+        greeting: '"Welcome back Emma! Would you like to try our Pumpkin Bread with your Frappe?"',
+        phone: '0103'
+    },
+    {
+        id: '6',
+        name: 'Michael Chang',
+        firstName: 'Michael',
+        status: 'Regular',
+        points: 800,
+        rank: 'Regular',
+        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
+        usualOrderId: '7',
+        usualSweetness: 'Regular',
+        upsellId: '12',
+        greeting: '"Morning Michael! Cold brew to start the day?"',
+        phone: '0104'
+    }
+].map(c => {
+    const usualItem = c.usualOrderId ? menuItems.find(i => i.id === c.usualOrderId) : null;
+    const upsellItem = c.upsellId ? menuItems.find(i => i.id === c.upsellId) : null;
+
+    return {
+        ...c,
+        usualOrder: usualItem?.name || '',
+        usualOrderIcon: usualItem?.icon || '',
+        upsell: upsellItem?.name || ''
+    };
+});
+
+let globalOrderIdCounter = 184;
+
 // Proxy: Polling Detection for Mock AI Environment
 app.get('/api/detect', async (req, res) => {
     try {
@@ -160,7 +151,7 @@ app.get('/api/detect', async (req, res) => {
         const newCustomer = {
             ...randomCustomer,
             id: Math.random().toString(36).substr(2, 9),
-            orderId: Math.floor(100 + Math.random() * 900).toString(),
+            orderId: (globalOrderIdCounter++).toString(),
             isRecommendationDown: Math.random() > 0.7
         };
         res.json({ customer: newCustomer });
