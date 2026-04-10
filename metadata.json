@@ -1,0 +1,5 @@
+{
+  "name": "CogniBrew",
+  "description": "A barista Point-of-Sale (POS) dashboard that features a left sidebar for \"AI Insights\" (customer facial recognition) and middle/right panels for standard POS operations (Menu and Current Order). ",
+  "requestFramePermissions": []
+}
