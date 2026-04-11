@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import type { Customer, MenuItem, Category, CartItem } from '../types';
+import { apiService } from '../services/api';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 import Sidebar from '../components/Sidebar';
 import AiInsightsPanel from '../components/AiInsightsPanel';
@@ -9,15 +11,8 @@ import OrderPanel from '../components/OrderPanel';
 import CustomizeModal from '../components/CustomizeModal';
 import MembershipModal from '../components/MembershipModal';
 
-
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   // ─── State ──────────────────────────────────────────────────────────
-  const [customerDatabase, setCustomerDatabase] = useState<Customer[]>([]);
-  const [sweetnessLevels, setSweetnessLevels] = useState<string[]>([]);
-  const [milkTypes, setMilkTypes] = useState<string[]>([]);
-  const [beanTypes, setBeanTypes] = useState<string[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [menuCategories, setMenuCategories] = useState<Category[]>([]);
   const [detectedCustomers, setDetectedCustomers] = useState<Customer[]>([]);
   const [insightsCustomerId, setInsightsCustomerId] = useState<string>('');
   const [isFaceRecognitionDown, setIsFaceRecognitionDown] = useState<boolean>(false);
@@ -32,23 +27,29 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
   const [linkedCustomer, setLinkedCustomer] = useState<Customer | null>(null);
-  const [popularItems, setPopularItems] = useState<MenuItem[]>([]);
+
+  const { 
+    menuItems, 
+    menuCategories, 
+    popularItems, 
+    sweetnessLevels, 
+    milkTypes, 
+    beanTypes, 
+    customerDatabase, 
+    isLoading 
+  } = useDashboardData();
 
   // ─── Callbacks ──────────────────────────────────────────────────────
 
   // Fire-and-forget feedback to ML backend (never blocks UI)
   const sendFeedback = (type: string, customer: Customer, orderId?: string) => {
-    fetch('http://localhost:3002/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type,
-        customerId: customer.id,
-        customerName: customer.name,
-        isGuest: customer.isGuest || false,
-        orderId: orderId || null,
-        timestamp: new Date().toISOString(),
-      })
+    apiService.sendFeedback({
+      type,
+      customerId: customer.id,
+      customerName: customer.name,
+      isGuest: customer.isGuest || false,
+      orderId: orderId || null,
+      timestamp: new Date().toISOString(),
     }).catch(err => console.error('Feedback send failed (non-blocking):', err));
   };
 
@@ -128,21 +129,13 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   const handleCheckout = async () => {
     try {
-      const response = await fetch('http://localhost:3002/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: linkedCustomer?.id || 'guest',
-          orderId: linkedCustomer?.orderId || 'New',
-          items: cartItems,
-          total: (cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10).toFixed(2),
-          isDineIn
-        })
+      await apiService.submitOrder({
+        customerId: linkedCustomer?.id || 'guest',
+        orderId: linkedCustomer?.orderId || 'New',
+        items: cartItems,
+        total: (cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10).toFixed(2),
+        isDineIn
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
 
       // Send feedback alongside order (fire-and-forget, non-blocking)
       if (linkedCustomer) {
@@ -172,39 +165,6 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   // ─── Effects ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    // 1. Fetch static configurations (modifiers, customer database)
-    fetch('http://localhost:3002/api/config')
-      .then(res => res.json())
-      .then(data => {
-        if (data.SWEETNESS_LEVELS) setSweetnessLevels(data.SWEETNESS_LEVELS);
-        if (data.MILK_TYPES) setMilkTypes(data.MILK_TYPES);
-        if (data.BEAN_TYPES) setBeanTypes(data.BEAN_TYPES);
-
-        if (data.customerDatabase) {
-          setCustomerDatabase(data.customerDatabase);
-        }
-      })
-      .catch(err => console.error("Failed to fetch config:", err));
-
-    // 2. Fetch standard menu
-    fetch('http://localhost:3002/api/menu')
-      .then(res => res.json())
-      .then(data => {
-        if (data.menuItems) setMenuItems(data.menuItems);
-        if (data.menuCategories) setMenuCategories(data.menuCategories);
-      })
-      .catch(err => console.error("Failed to fetch menu:", err));
-
-    // 3. Fetch popular items (for guest recommendations)
-    fetch('http://localhost:3002/api/popular')
-      .then(res => res.json())
-      .then(data => {
-        if (data.popularItems) setPopularItems(data.popularItems);
-      })
-      .catch(err => console.error("Failed to fetch popular items:", err));
-  }, []);
-
   /*
   useEffect(() => {
     const connection = new HubConnectionBuilder()
@@ -231,8 +191,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
     const pollDetection = async () => {
       try {
-        const response = await fetch('http://localhost:3002/api/detect');
-        const data = await response.json();
+        const data = await apiService.detectCustomer();
+
         if (data.customer) {
           setIsFaceDetecting(true);
 
@@ -263,6 +223,14 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const insightsCustomer = detectedCustomers.find(c => c.id === insightsCustomerId) || detectedCustomers[0];
 
   // ─── Render ─────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background text-white text-xl">
+        กำลังโหลดระบบ...
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden flex h-screen w-full bg-background text-on-background">
       {/* Zone 1: Sidebar */}
