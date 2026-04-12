@@ -4,7 +4,7 @@ import cors from 'cors';
 
 const PORT = 3002;
 // The local network IP of your Edge Machine
-const EDGE_API_URL = process.env.EDGE_API_URL || 'http://192.168.1.50:8000';
+const EDGE_API_URL = process.env.EDGE_API_URL || 'http://localhost:8001/api/v1';
 
 const app = express();
 
@@ -56,9 +56,9 @@ const customerDatabase = [
         points: 4200,
         rank: 'Gold',
         image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
-        usualOrderId: '5',
+        usualOrderId: 'americano-hot',
         usualSweetness: 'No Sugar',
-        upsellId: '9',
+        upsellId: 'croissant',
         greeting: '"Hey Sarah! Welcome back. Shall we get your usual Americano started, and maybe pair it with a fresh Croissant today?"',
         phone: '1111'
     },
@@ -79,9 +79,9 @@ const customerDatabase = [
         points: 1500,
         rank: 'Silver',
         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
-        usualOrderId: '1',
+        usualOrderId: 'latte-hot',
         usualSweetness: 'Less Sugar',
-        upsellId: '10',
+        upsellId: 'banana-bread',
         greeting: '"Hi David! The usual Latte today?"',
         phone: '0102'
     },
@@ -103,10 +103,10 @@ const customerDatabase = [
         points: 200,
         rank: 'New',
         image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
-        usualOrderId: '15',
+        usualOrderId: 'frappuccino-caramel',
         usualSweetness: 'More Sugar',
-        upsellId: '11',
-        greeting: '"Welcome back Emma! Would you like to try our Pumpkin Bread with your Frappe?"',
+        upsellId: 'banana-bread',
+        greeting: '"Welcome back Emma! Would you like to try our Banana Bread with your Frappuccino?"',
         phone: '0103'
     },
     {
@@ -116,43 +116,39 @@ const customerDatabase = [
         points: 800,
         rank: 'Regular',
         image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
-        usualOrderId: '7',
+        usualOrderId: 'americano-cold',
         usualSweetness: 'Regular',
-        upsellId: '12',
-        greeting: '"Morning Michael! Cold brew to start the day?"',
+        upsellId: 'cheesecake',
+        greeting: '"Morning Michael! Iced Americano to start the day?"',
         phone: '0104',
         isRecommendationDown: true
     }
 ].map(c => {
-    const usualItem = c.usualOrderId ? menuItems.find(i => i.id === c.usualOrderId) : null;
-    const upsellItem = c.upsellId ? menuItems.find(i => i.id === c.upsellId) : null;
+    // Hardcoded display values for mock data (in production, these come from the recommendation service)
+    const usualOrderNames: Record<string, { name: string; icon: string }> = {
+        'americano-hot': { name: 'Americano (Hot)', icon: 'local_cafe' },
+        'latte-hot': { name: 'Caffe Latte (Hot)', icon: 'local_cafe' },
+        'frappuccino-caramel': { name: 'Caramel Frappuccino', icon: 'blender' },
+        'americano-cold': { name: 'Americano (Cold)', icon: 'ac_unit' },
+    };
+    const upsellNames: Record<string, string> = {
+        'croissant': 'Butter Croissant',
+        'banana-bread': 'Banana Bread',
+        'cheesecake': 'New York Cheesecake',
+    };
+
+    const usualItem = c.usualOrderId ? usualOrderNames[c.usualOrderId] : null;
 
     return {
         ...c,
         usualOrder: usualItem?.name || '',
         usualOrderIcon: usualItem?.icon || '',
-        upsell: upsellItem?.name || ''
+        upsell: c.upsellId ? (upsellNames[c.upsellId] || '') : '',
     };
 });
 
 let globalOrderIdCounter = 184;
 let detectionIndex = 0;
-
-// Proxy: Polling Detection for Mock AI Environment
-app.get('/api/detect', async (req, res) => {
-    try {
-        // Cycle through customer profiles in order for predictable debugging
-        const customer = customerDatabase[detectionIndex % customerDatabase.length];
-        detectionIndex++;
-        const newCustomer = {
-            ...customer,
-            orderId: 'New'
-        };
-        res.json({ customer: newCustomer });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to simulate detection' });
-    }
-});
 
 // Proxy: Fetch Config
 app.get('/api/config', async (req, res) => {
@@ -170,16 +166,39 @@ app.get('/api/config', async (req, res) => {
 });
 
 // Proxy: Fetch Menu
+const categoryIcons: Record<string, string> = {
+    'Hot': 'local_cafe',
+    'Cold': 'ac_unit',
+    'Blended': 'blender',
+    'Food': 'bakery_dining',
+};
+
 app.get('/api/menu', async (req, res) => {
     try {
         // --- OFFLINE MODE (MOCK DATA) ---
-        res.json({ menuItems, menuCategories });
+        //res.json({ menuItems, menuCategories });
 
         // --- ONLINE MODE (EDGE API) ---
-        // Uncomment the lines below and comment out the mock data above to connect to Edge
-        // const response = await fetch(`${EDGE_API_URL}/menu`);
-        // const data = await response.json();
-        // res.json(data);
+        const response = await fetch(`${EDGE_API_URL}/catalog/menu`);
+        const data = await response.json();
+
+        // Map backend items → frontend MenuItem schema
+        const mappedMenuItems = data.items.map((item: any) => ({
+            id: item.item_id,
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            icon: categoryIcons[item.category] || 'star',
+        }));
+
+        // Extract unique categories → frontend Category schema
+        const mappedMenuCategories = [...new Set(data.items.map((item: any) => item.category))]
+            .map((category: any) => ({
+                name: category,
+                icon: categoryIcons[category] || 'star',
+            }));
+
+        res.json({ menuItems: mappedMenuItems, menuCategories: mappedMenuCategories });
     } catch (error) {
         console.error('Edge API offline / Error serving mock:', error);
         res.status(500).json({ error: 'Failed to communicate with Edge' });
@@ -204,6 +223,22 @@ app.get('/api/popular', async (req, res) => {
     } catch (error) {
         console.error('Error fetching popular items:', error);
         res.status(500).json({ error: 'Failed to fetch popular items' });
+    }
+});
+
+// Proxy: Polling Detection for Mock AI Environment
+app.get('/api/detect', async (req, res) => {
+    try {
+        // Cycle through customer profiles in order for predictable debugging
+        const customer = customerDatabase[detectionIndex % customerDatabase.length];
+        detectionIndex++;
+        const newCustomer = {
+            ...customer,
+            orderId: 'New'
+        };
+        res.json({ customer: newCustomer });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to simulate detection' });
     }
 });
 

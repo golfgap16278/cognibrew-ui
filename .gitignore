@@ -10,6 +10,7 @@ coverage/
 # Local files
 customer.json
 menuItems.json
+menuItem_old.json
 cheatsheet.txt
 *.sqlite
 *.db
