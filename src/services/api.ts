@@ -2,8 +2,13 @@
 import type { Feedback } from '../types';
 
 const API_BASE_URL = 'http://localhost:3002/api';
+const HUB_API = 'http://localhost:5000/chatHub';
 
 export const apiService = {
+  getHubEndpoint: () => {
+    return HUB_API;
+  },
+
   // ดึงข้อมูลการตั้งค่าพื้นฐาน
   getConfig: async () => {
     const res = await fetch(`${API_BASE_URL}/config`);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import * as signalR from '@microsoft/signalr';
 import type { Customer, MenuItem, Category, CartItem, Feedback } from '../types';
 import { apiService } from '../services/api';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -10,6 +10,15 @@ import MenuPanel from '../components/MenuPanel';
 import OrderPanel from '../components/OrderPanel';
 import CustomizeModal from '../components/CustomizeModal';
 import MembershipModal from '../components/MembershipModal';
+
+// ฟังก์ชันสำหรับคำนวณน้ำหนักข้อมูล
+const calculateDataWeight = (data: any) => {
+  if (!data) return 0;
+  console.log(data);
+  return Object.values(data).filter(
+    (value) => value !== null && value !== undefined && value !== ''
+  ).length;
+};
 
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   // ─── State ──────────────────────────────────────────────────────────
@@ -38,6 +47,11 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     customerDatabase,
     isLoading
   } = useDashboardData();
+
+  const menuItemsRef = useRef(menuItems);
+  useEffect(() => {
+    menuItemsRef.current = menuItems;
+  }, [menuItems]);
 
   // ─── Callbacks ──────────────────────────────────────────────────────
 
@@ -191,36 +205,97 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   useEffect(() => {
     if (isFaceRecognitionDown) return;
 
-    const pollDetection = async () => {
-      try {
-        const data = await apiService.detectCustomer();
+    // 1. ตั้งค่าการเชื่อมต่อ SignalR
+    const hubUrl = apiService.getHubEndpoint();
+    const token = localStorage.getItem('access_token') || ""; // ดึง Token
 
-        if (data.customer) {
-          setIsFaceDetecting(true);
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(hubUrl, {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect()
+      .build();
 
-          if (faceDetectionTimerRef.current) {
-            clearTimeout(faceDetectionTimerRef.current);
+    // 2. ฟังก์ชันจัดการเมื่อได้รับข้อมูลจาก SignalR
+    connection.on("Notify", (payload) => {
+      const rawCustomer = payload.customer;
+      if (!rawCustomer || (!rawCustomer.id && !rawCustomer.face_id)) return;
+
+      // แปลงโครงสร้างข้อมูล (Mapping) เพื่อให้ React นำไปใช้ได้อย่างถูกต้อง
+      const newCustomer = {
+        ...rawCustomer,
+        face_id: rawCustomer.id || rawCustomer.face_id, // บังคับให้มี face_id เสมอเพื่อเอาไปทำ Key
+        usualOrderId: menuItemsRef.current.find(x => x.name.trim().toLowerCase() === rawCustomer.usualOrder?.trim().toLowerCase())?.id || null,
+        upsellId: menuItemsRef.current.find(x => x.name.trim().toLowerCase() === rawCustomer.upsell?.trim().toLowerCase())?.id || null,
+      };
+
+      const customerId = newCustomer.face_id;
+
+      // แสดงสถานะการตรวจจับ (คง Logic เดิมไว้)
+      setIsFaceDetecting(true);
+      if (faceDetectionTimerRef.current) {
+        clearTimeout(faceDetectionTimerRef.current);
+      }
+      faceDetectionTimerRef.current = setTimeout(() => {
+        setIsFaceDetecting(false);
+        faceDetectionTimerRef.current = null;
+      }, 4000);
+
+      // Logic การอัปเดตข้อมูล
+      setDetectedCustomers((prev) => {
+        const existingIndex = prev.findIndex(
+          (c) => (c.id || c.face_id) === customerId
+        );
+
+        const newWeight = calculateDataWeight(newCustomer);
+
+        if (existingIndex !== -1) {
+          const existingWeight = calculateDataWeight(prev[existingIndex]);
+
+          if (newWeight >= existingWeight) {
+            const updatedList = [...prev];
+            
+            // นำข้อมูลใหม่มาทับเฉพาะฟิลด์ที่ไม่ใช่ null หรือ undefined
+            const cleanedNewCustomer = Object.fromEntries(
+              Object.entries(newCustomer).filter(([_, v]) => v !== null && v !== undefined && v !== "")
+            );
+
+            updatedList[existingIndex] = { 
+              ...prev[existingIndex], 
+              ...cleanedNewCustomer // ทับเฉพาะค่าที่มีประโยชน์ ค่าเก่าจะไม่หาย
+            };
+            return updatedList;
           }
-
-          faceDetectionTimerRef.current = setTimeout(() => {
-            setIsFaceDetecting(false);
-            faceDetectionTimerRef.current = null;
-          }, 4000);
-
-          setDetectedCustomers(prev => {
-            if (prev.length === 0) setInsightsCustomerId(data.customer.face_id);
-            return [...prev, data.customer];
-          });
+          return prev;
         }
-      } catch (error) {
-        console.error('Failed to poll detection:', error);
+
+        // ลบ setInsightsCustomerId ออกจากตรงนี้
+        return [...prev, newCustomer];
+      });
+    });
+
+    // 3. เริ่มการเชื่อมต่อ
+    connection.start()
+      .then(() => console.log("SignalR Connected to Hub"))
+      .catch((err) => console.error("SignalR Connection Error: ", err));
+
+    // Cleanup เมื่อ Component ถูกทำลาย
+    return () => {
+      connection.stop();
+      if (faceDetectionTimerRef.current) {
+        clearTimeout(faceDetectionTimerRef.current);
       }
     };
-
-    // Auto-detect a new customer every 15 seconds by querying the proxy
-    const intervalId = setInterval(pollDetection, 15000);
-    return () => clearInterval(intervalId);
   }, [isFaceRecognitionDown]);
+
+  // ใช้ useEffect ตัวนี้จัดการแทนเมื่อมีลูกค้าใหม่เข้ามาเป็นคนแรก
+  useEffect(() => {
+    // ถ้ายังไม่มีคนที่ถูกเลือก (Insights) และมีลูกค้าในคิวแล้ว ให้เลือกคนแรก
+    if (detectedCustomers.length > 0 && !insightsCustomerId) {
+      const firstCustomer = detectedCustomers[0];
+      setInsightsCustomerId(firstCustomer.face_id || firstCustomer.id);
+    }
+  }, [detectedCustomers, insightsCustomerId]);
 
   const insightsCustomer = detectedCustomers.find(c => c.face_id === insightsCustomerId) || detectedCustomers[0];
 

@@ -188,7 +188,18 @@ export default function AiInsightsPanel({
                       >
                         <div className="relative mb-2 flex justify-center">
                           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-secondary-container shadow-sm transition-colors group-hover:border-secondary-container">
-                            <img alt={insightsCustomer.name} className="w-full h-full object-cover" src={insightsCustomer.image} />
+                          {insightsCustomer.image ? (
+                            <img 
+                              alt={insightsCustomer.name || 'Customer'} 
+                              className="w-full h-full object-cover" 
+                              src={`data:image/jpeg;base64,${insightsCustomer.image}`} 
+                            />
+                          ) : (
+                            /* แสดงกล่องสีเทาหรือรูป Default แทนถ้ายกเว้นไม่มีรูป */
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                              No Image
+                            </div>
+                          )}
                           </div>
                         </div>
                         <h3 className="font-headline font-extrabold text-xl text-primary mb-0.5 text-center">{insightsCustomer.name}</h3>
@@ -284,14 +295,17 @@ export default function AiInsightsPanel({
                             <div className={`w-12 h-12 rounded-full bg-white border-2 group-hover:scale-105 transition-all shadow flex items-center justify-center ${insightsCustomerId === customer.face_id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}>
                               <span className="material-symbols-outlined text-stone-400 text-xl">person</span>
                             </div>
-                          ) : (
+                          ) : customer.image ? (
                             <img
-                              src={customer.image}
+                              src={`data:image/jpeg;base64,${customer.image}`}
                               alt={customer.name}
                               className={`w-12 h-12 rounded-full object-cover border-2 group-hover:scale-105 transition-all shadow-sm ${insightsCustomerId === customer.face_id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}
                             />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                              No Image
+                            </div>
                           )}
-
                         </motion.button>
                       ))}
                     </AnimatePresence>
