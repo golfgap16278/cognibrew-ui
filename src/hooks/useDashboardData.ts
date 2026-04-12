@@ -21,7 +21,7 @@ export function useDashboardData() {
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
-        
+
         // เรียก API 3 ตัวพร้อมกัน
         const [configData, menuData, popularData] = await Promise.all([
           apiService.getConfig(),
@@ -38,7 +38,7 @@ export function useDashboardData() {
         // นำข้อมูล Menu มาเก็บลง State
         if (menuData.menuItems) setMenuItems(menuData.menuItems);
         if (menuData.menuCategories) setMenuCategories(menuData.menuCategories);
-        
+
         // นำข้อมูล Popular มาเก็บลง State
         setPopularItems(popularData.popularItems);
 
@@ -53,14 +53,14 @@ export function useDashboardData() {
   }, []);
 
   // ส่งข้อมูลทั้งหมดกลับไปให้ dashboard.tsx ใช้งาน
-  return { 
-    menuItems, 
-    menuCategories, 
-    popularItems, 
+  return {
+    menuItems,
+    menuCategories,
+    popularItems,
     sweetnessLevels,
     milkTypes,
     beanTypes,
     customerDatabase,
-    isLoading 
+    isLoading
   };
 }

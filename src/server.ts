@@ -13,9 +13,9 @@ app.use(cors());
 app.use(express.json());
 
 // Mock Data for offline testing
-const SWEETNESS_LEVELS = ["No Sugar", "Less Sugar", "Regular", "More Sugar"];
-const MILK_TYPES = ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"];
-const BEAN_TYPES = ["House Blend", "Single Origin", "Decaf"];
+const SWEETNESS_LEVELS = ["0%", "25%", "50%", "100%"];
+// const MILK_TYPES = ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"];
+// const BEAN_TYPES = ["House Blend", "Single Origin", "Decaf"];
 
 const menuCategories = [
     { name: 'Hot Drinks', icon: 'local_cafe' },
@@ -57,7 +57,7 @@ const customerDatabase = [
         rank: 'Gold',
         image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
         usualOrderId: 'americano-hot',
-        usualSweetness: 'No Sugar',
+        usualSweetness: '0%',
         upsellId: 'croissant',
         greeting: '"Hey Sarah! Welcome back. Shall we get your usual Americano started, and maybe pair it with a fresh Croissant today?"',
         phone: '1111'
@@ -80,7 +80,7 @@ const customerDatabase = [
         rank: 'Silver',
         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
         usualOrderId: 'latte-hot',
-        usualSweetness: 'Less Sugar',
+        usualSweetness: '50%',
         upsellId: 'banana-bread',
         greeting: '"Hi David! The usual Latte today?"',
         phone: '0102'
@@ -104,7 +104,7 @@ const customerDatabase = [
         rank: 'New',
         image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
         usualOrderId: 'frappuccino-caramel',
-        usualSweetness: 'More Sugar',
+        usualSweetness: '100%',
         upsellId: 'banana-bread',
         greeting: '"Welcome back Emma! Would you like to try our Banana Bread with your Frappuccino?"',
         phone: '0103'
@@ -117,7 +117,7 @@ const customerDatabase = [
         rank: 'Regular',
         image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
         usualOrderId: 'americano-cold',
-        usualSweetness: 'Regular',
+        usualSweetness: '25%',
         upsellId: 'cheesecake',
         greeting: '"Morning Michael! Iced Americano to start the day?"',
         phone: '0104',
@@ -126,10 +126,10 @@ const customerDatabase = [
 ].map(c => {
     // Hardcoded display values for mock data (in production, these come from the recommendation service)
     const usualOrderNames: Record<string, { name: string; icon: string }> = {
-        'americano-hot': { name: 'Americano (Hot)', icon: 'local_cafe' },
-        'latte-hot': { name: 'Caffe Latte (Hot)', icon: 'local_cafe' },
+        'americano-hot': { name: 'Hot Americano', icon: 'local_cafe' },
+        'latte-hot': { name: 'Hot Caffe Latte', icon: 'local_cafe' },
         'frappuccino-caramel': { name: 'Caramel Frappuccino', icon: 'blender' },
-        'americano-cold': { name: 'Americano (Cold)', icon: 'ac_unit' },
+        'americano-cold': { name: 'Iced Americano', icon: 'ac_unit' },
     };
     const upsellNames: Record<string, string> = {
         'croissant': 'Butter Croissant',
@@ -155,8 +155,6 @@ app.get('/api/config', async (req, res) => {
     try {
         res.json({
             SWEETNESS_LEVELS,
-            MILK_TYPES,
-            BEAN_TYPES,
             customerDatabase
         });
     } catch (error) {
@@ -173,6 +171,13 @@ const categoryIcons: Record<string, string> = {
     'Food': 'bakery_dining',
 };
 
+const categoryMapping: Record<string, string> = {
+    'Hot': 'Hot Drinks',
+    'Cold': 'Iced Drinks',
+    'Blended': 'Frappe',
+    'Food': 'Desserts',
+};
+
 app.get('/api/menu', async (req, res) => {
     try {
         // --- OFFLINE MODE (MOCK DATA) ---
@@ -183,18 +188,29 @@ app.get('/api/menu', async (req, res) => {
         const data = await response.json();
 
         // Map backend items → frontend MenuItem schema
-        const mappedMenuItems = data.items.map((item: any) => ({
-            id: item.item_id,
-            name: item.name,
-            price: item.price,
-            category: item.category,
-            icon: categoryIcons[item.category] || 'star',
-        }));
+        const mappedMenuItems = data.items.map((item: any) => {
+            let itemName = item.name;
+            const isHot = itemName.endsWith(' (Hot)') || item.category === 'Hot';
+            const isCold = itemName.endsWith(' (Cold)') || item.category === 'Cold';
+
+            itemName = itemName.replace(' (Hot)', '').replace(' (Cold)', '');
+
+            if (isHot && !itemName.startsWith('Hot ')) itemName = `Hot ${itemName}`;
+            if (isCold && !itemName.startsWith('Iced ')) itemName = `Iced ${itemName}`;
+
+            return {
+                id: item.item_id,
+                name: itemName,
+                price: item.price,
+                category: categoryMapping[item.category] || item.category,
+                icon: categoryIcons[item.category] || 'star',
+            };
+        });
 
         // Extract unique categories → frontend Category schema
         const mappedMenuCategories = [...new Set(data.items.map((item: any) => item.category))]
             .map((category: any) => ({
-                name: category,
+                name: categoryMapping[category] || category,
                 icon: categoryIcons[category] || 'star',
             }));
 
@@ -206,6 +222,7 @@ app.get('/api/menu', async (req, res) => {
 });
 
 // Proxy: Fetch Popular Items (for Guest Recommendations)
+// รอรับจาก notification service
 app.get('/api/popular', async (req, res) => {
     try {
         // --- OFFLINE MODE (MOCK DATA) ---

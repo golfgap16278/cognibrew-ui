@@ -1,5 +1,7 @@
 import type { CartItem, Customer } from '../types';
 
+const TAX_RATE = 0.07;
+
 type OrderPanelProps = {
   cartItems: CartItem[];
   linkedCustomer: Customer | null;
@@ -51,7 +53,7 @@ export default function OrderPanel({
               <div key={item.id} className="flex flex-col gap-1 py-5 first:pt-0">
                 <div className="flex justify-between items-start">
                   <span className="font-bold text-stone-800">{item.name}</span>
-                  <span className="font-bold text-stone-800">${(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-bold text-stone-800">฿{(item.price * item.quantity).toFixed(0)}</span>
                 </div>
                 {item.modifiers && Object.keys(item.modifiers).length > 0 && (
                   <div className="text-xs text-stone-500 flex flex-wrap gap-1 mt-0.5">
@@ -97,16 +99,16 @@ export default function OrderPanel({
         <div className="space-y-2 mb-6">
           <div className="flex justify-between text-sm text-stone-500">
             <span>Subtotal</span>
-            <span>${cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+            <span>฿{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm text-stone-500">
-            <span>Tax (10%)</span>
-            <span>${(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 0.10).toFixed(2)}</span>
+            <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
+            <span>฿{(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * TAX_RATE).toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-baseline pt-2">
             <span className="font-headline font-bold text-lg text-stone-800">Total</span>
             <span className="font-headline font-extrabold text-4xl text-primary">
-              ${(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10).toFixed(2)}
+              ฿{(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * (1 + TAX_RATE)).toFixed(2)}
             </span>
           </div>
         </div>

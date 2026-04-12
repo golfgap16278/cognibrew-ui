@@ -62,7 +62,7 @@ export default function MenuPanel({
                 </div>
                 <div className="w-full mt-2">
                   <div className="font-bold text-stone-800 leading-tight truncate">{item.name}</div>
-                  <div className="text-stone-500 text-sm mt-0.5">${item.price.toFixed(2)}</div>
+                  <div className="text-stone-500 text-sm mt-0.5">฿{item.price.toFixed(0)}</div>
                 </div>
               </button>
             ))}
