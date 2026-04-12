@@ -29,8 +29,8 @@ CogniBrew is a near real-time customer recognition system built for the café in
 │  ┌──────────┐  ┌────────────────┐  ┌──────────────┐  ┌───────────┐  │
 │  │ Sidebar  │  │  AI Insights   │  │     Menu     │  │   Order   │  │
 │  │          │  │                │  │              │  │           │  │
-│  │ Register │  │ Face Detection │  │  Categories  │  │   Cart    │  │
-│  │ History  │  │ Customer Card  │  │  Item Grid   │  │  Totals   │  │
+│  │ Register │  │ Face Detection │  │  Categories  │  │ Cart      │  │
+│  │ History  │  │ Customer Card  │  │  Item Grid   │  │ Totals    │  │
 │  │ Kitchen  │  │ Usual Order    │  │              │  │ Checkout  │  │
 │  │ Customer │  │ Upsell         │  │              │  │           │  │
 │  │ Settings │  │ Greeting       │  │              │  │           │  │
@@ -46,7 +46,7 @@ CogniBrew is a near real-time customer recognition system built for the café in
                              │
                    ┌─────────▼──────────┐
                    │   Edge ML Server   │
-                   │  (or Mock Data)    │
+                   │   (or Mock Data)   │
                    └────────────────────┘
 ```
 
@@ -60,8 +60,7 @@ CogniBrew is a near real-time customer recognition system built for the café in
 - **Routing** — React Router v7
 - **Icons** — Material Symbols + Lucide React
 - **Backend Proxy** — Express + CORS
-- **Real-time** — SignalR (prepared, currently polled)
-- **AI Integration** — Google Gemini API (optional)
+- **Real-time WS** — SignalR
 
 ---
 

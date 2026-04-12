@@ -115,7 +115,7 @@ export default function AiInsightsPanel({
               {/* Primary Customer Card */}
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={insightsCustomer.id}
+                  key={insightsCustomer.face_id}
                   initial={{ opacity: 0, y: 32, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 32, scale: 0.95 }}
@@ -276,20 +276,19 @@ export default function AiInsightsPanel({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.5 }}
                           transition={{ duration: 0.3, type: "spring", bounce: 0.2 }}
-                          key={customer.id}
-                          onClick={() => onFocus(customer.id)}
+                          key={customer.face_id}
+                          onClick={() => onFocus(customer.face_id)}
                           className="relative group focus:outline-none shrink-0"
-                          title={`Focus ${customer.firstName}`}
                         >
                           {customer.isGuest ? (
-                            <div className={`w-12 h-12 rounded-full bg-white border-2 group-hover:scale-105 transition-all shadow flex items-center justify-center ${insightsCustomerId === customer.id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}>
+                            <div className={`w-12 h-12 rounded-full bg-white border-2 group-hover:scale-105 transition-all shadow flex items-center justify-center ${insightsCustomerId === customer.face_id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}>
                               <span className="material-symbols-outlined text-stone-400 text-xl">person</span>
                             </div>
                           ) : (
                             <img
                               src={customer.image}
                               alt={customer.name}
-                              className={`w-12 h-12 rounded-full object-cover border-2 group-hover:scale-105 transition-all shadow-sm ${insightsCustomerId === customer.id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}
+                              className={`w-12 h-12 rounded-full object-cover border-2 group-hover:scale-105 transition-all shadow-sm ${insightsCustomerId === customer.face_id ? 'border-primary-fixed' : 'border-transparent group-hover:border-primary-container'}`}
                             />
                           )}
 

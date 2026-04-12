@@ -1,8 +1,7 @@
 export type Customer = {
-  id: string;
+  face_id: string;
   orderId: string;
   name: string;
-  firstName: string;
   status: string;
   points: number;
   rank: 'Gold' | 'Silver' | 'Regular' | 'New' | 'Guest';
@@ -39,4 +38,13 @@ export type CartItem = {
   price: number;
   quantity: number;
   modifiers?: Record<string, string>;
+};
+
+export type Feedback = {
+  type: 'true_positive' | 'true_negative' | 'false_positive' | 'false_negative' | 'skip';
+  face_id: string;
+  customerName: string;
+  isGuest: boolean;
+  orderId: string | null;
+  timestamp: string;
 };

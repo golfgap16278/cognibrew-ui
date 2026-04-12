@@ -1,4 +1,5 @@
 // src/services/api.ts
+import type { Feedback } from '../types';
 
 const API_BASE_URL = 'http://localhost:3002/api';
 
@@ -42,7 +43,7 @@ export const apiService = {
   },
 
   // ส่งข้อมูล Feedback ให้ AI
-  sendFeedback: async (feedbackData: any) => {
+  sendFeedback: async (feedbackData: Feedback) => {
     const res = await fetch(`${API_BASE_URL}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

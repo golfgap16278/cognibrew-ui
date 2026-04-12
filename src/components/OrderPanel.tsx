@@ -28,7 +28,7 @@ export default function OrderPanel({
       <div className="p-6 border-b border-stone-100 bg-stone-50/50">
         <div className="flex justify-between items-center mb-1">
           <h2 className="font-headline font-bold text-xl text-stone-800 truncate pr-2">
-            {linkedCustomer ? (linkedCustomer.isGuest ? 'Guest Order' : `${linkedCustomer.firstName}'s Order`) : 'Order'}
+            {linkedCustomer ? (linkedCustomer.isGuest ? 'Guest Order' : `${linkedCustomer.name.split(' ')[0]}'s Order`) : 'Order'}
           </h2>
           <button
             onClick={() => onSetIsDineIn(!isDineIn)}

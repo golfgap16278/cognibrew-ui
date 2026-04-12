@@ -50,9 +50,8 @@ const menuItems = [
 
 const customerDatabase = [
     {
-        id: '1',
+        face_id: 'vec_a7b3c9d2e1',
         name: 'Sarah Johnson',
-        firstName: 'Sarah',
         status: 'Gold Member',
         points: 4200,
         rank: 'Gold',
@@ -64,9 +63,31 @@ const customerDatabase = [
         phone: '1111'
     },
     {
-        id: '2',
+        face_id: 'vec_f4e8d1a6b2',
         name: 'Guest Customer',
-        firstName: 'Guest',
+        status: 'Unregistered Profile',
+        points: 0,
+        rank: 'Guest',
+        image: '',
+        greeting: '',
+        isGuest: true
+    },
+    {
+        face_id: 'vec_c2d9e5f3a8',
+        name: 'David Chen',
+        status: 'Silver Member',
+        points: 1500,
+        rank: 'Silver',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
+        usualOrderId: '1',
+        usualSweetness: 'Less Sugar',
+        upsellId: '10',
+        greeting: '"Hi David! The usual Latte today?"',
+        phone: '0102'
+    },
+    {
+        face_id: 'vec_b8a1d7c4e9',
+        name: 'Guest Customer',
         status: 'Unregistered Profile',
         points: 0,
         rank: 'Guest',
@@ -76,35 +97,8 @@ const customerDatabase = [
         isRecommendationDown: true
     },
     {
-        id: '3',
-        name: 'David Chen',
-        firstName: 'David',
-        status: 'Silver Member',
-        points: 1500,
-        rank: 'Silver',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
-        usualOrderId: '1',
-        usualSweetness: 'Less Sugar',
-        upsellId: '10',
-        greeting: '"Hi David! The usual Latte today?"',
-        phone: '0102',
-        isRecommendationDown: true
-    },
-    {
-        id: '4',
-        name: 'Guest Customer',
-        firstName: 'Guest',
-        status: 'Unregistered Profile',
-        points: 0,
-        rank: 'Guest',
-        image: '',
-        greeting: '',
-        isGuest: true
-    },
-    {
-        id: '5',
+        face_id: 'vec_e6f2b5a9d3',
         name: 'Emma Wilson',
-        firstName: 'Emma',
         status: 'New Customer',
         points: 200,
         rank: 'New',
@@ -116,9 +110,8 @@ const customerDatabase = [
         phone: '0103'
     },
     {
-        id: '6',
+        face_id: 'vec_d3c7a2e8f1',
         name: 'Michael Chang',
-        firstName: 'Michael',
         status: 'Regular',
         points: 800,
         rank: 'Regular',
@@ -127,7 +120,8 @@ const customerDatabase = [
         usualSweetness: 'Regular',
         upsellId: '12',
         greeting: '"Morning Michael! Cold brew to start the day?"',
-        phone: '0104'
+        phone: '0104',
+        isRecommendationDown: true
     }
 ].map(c => {
     const usualItem = c.usualOrderId ? menuItems.find(i => i.id === c.usualOrderId) : null;
@@ -142,17 +136,17 @@ const customerDatabase = [
 });
 
 let globalOrderIdCounter = 184;
+let detectionIndex = 0;
 
 // Proxy: Polling Detection for Mock AI Environment
 app.get('/api/detect', async (req, res) => {
     try {
-        // Randomly pick an offline profile and assign it a fresh ID and faux AI connection state
-        const randomCustomer = customerDatabase[Math.floor(Math.random() * customerDatabase.length)];
+        // Cycle through customer profiles in order for predictable debugging
+        const customer = customerDatabase[detectionIndex % customerDatabase.length];
+        detectionIndex++;
         const newCustomer = {
-            ...randomCustomer,
-            id: Math.random().toString(36).substr(2, 9),
-            orderId: (globalOrderIdCounter++).toString(),
-            isRecommendationDown: Math.random() > 0.7
+            ...customer,
+            orderId: 'New'
         };
         res.json({ customer: newCustomer });
     } catch (error) {
@@ -238,16 +232,16 @@ app.post('/api/order', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
     try {
         // --- OFFLINE MODE (MOCK DATA) ---
-        const { type, customerId, customerName, isGuest, orderId } = req.body;
+        const { type, face_id, customerName, isGuest, orderId } = req.body;
         const labels: Record<string, string> = {
             true_positive: '✅ TRUE POSITIVE',
             true_negative: '✅ TRUE NEGATIVE',
             false_positive: '❌ FALSE POSITIVE',
             false_negative: '❌ FALSE NEGATIVE',
-            ignored: '⏭️  IGNORED',
+            skip: '⏭️  SKIP',
         };
         const label = labels[type] || `❓ UNKNOWN (${type})`;
-        console.log(`[Feedback] ${label} | ${isGuest ? 'Guest' : customerName} (${customerId}) | ${orderId ? `Order: ${orderId}` : 'No order'}`);
+        console.log(`[Feedback] ${label} | ${isGuest ? 'Guest' : customerName} (${face_id})`);
         res.json({ success: true, message: 'Feedback received offline!' });
 
         // --- ONLINE MODE (EDGE API) ---

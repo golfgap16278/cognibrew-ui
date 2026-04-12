@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import type { Customer, MenuItem, Category, CartItem } from '../types';
+import type { Customer, MenuItem, Category, CartItem, Feedback } from '../types';
 import { apiService } from '../services/api';
 import { useDashboardData } from '../hooks/useDashboardData';
 
@@ -28,24 +28,24 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [phoneError, setPhoneError] = useState<string>('');
   const [linkedCustomer, setLinkedCustomer] = useState<Customer | null>(null);
 
-  const { 
-    menuItems, 
-    menuCategories, 
-    popularItems, 
-    sweetnessLevels, 
-    milkTypes, 
-    beanTypes, 
-    customerDatabase, 
-    isLoading 
+  const {
+    menuItems,
+    menuCategories,
+    popularItems,
+    sweetnessLevels,
+    milkTypes,
+    beanTypes,
+    customerDatabase,
+    isLoading
   } = useDashboardData();
 
   // ─── Callbacks ──────────────────────────────────────────────────────
 
   // Fire-and-forget feedback to ML backend (never blocks UI)
-  const sendFeedback = (type: string, customer: Customer, orderId?: string) => {
+  const sendFeedback = (type: Feedback['type'], customer: Customer, orderId?: string) => {
     apiService.sendFeedback({
       type,
-      customerId: customer.id,
+      face_id: customer.face_id,
       customerName: customer.name,
       isGuest: customer.isGuest || false,
       orderId: orderId || null,
@@ -67,9 +67,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const dismissFocused = () => {
     if (detectedCustomers.length === 0) return;
     setDetectedCustomers(prev => {
-      const remaining = prev.filter(c => c.id !== insightsCustomerId);
+      const remaining = prev.filter(c => c.face_id !== insightsCustomerId);
       if (remaining.length > 0) {
-        setInsightsCustomerId(remaining[0].id);
+        setInsightsCustomerId(remaining[0].face_id);
       }
       return remaining;
     });
@@ -77,22 +77,22 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   // Registered card: "Wrong Person" → False Positive
   const handleWrongPerson = () => {
-    const customer = detectedCustomers.find(c => c.id === insightsCustomerId);
+    const customer = detectedCustomers.find(c => c.face_id === insightsCustomerId);
     if (customer) sendFeedback('false_positive', customer);
     dismissFocused();
   };
 
   // Guest card: "Not a Guest" → False Negative
   const handleNotAGuest = () => {
-    const customer = detectedCustomers.find(c => c.id === insightsCustomerId);
+    const customer = detectedCustomers.find(c => c.face_id === insightsCustomerId);
     if (customer) sendFeedback('false_negative', customer);
     dismissFocused();
   };
 
   // Both cards: "Skip" → Ignored (track skip rates)
   const handleSkip = () => {
-    const customer = detectedCustomers.find(c => c.id === insightsCustomerId);
-    if (customer) sendFeedback('ignored', customer);
+    const customer = detectedCustomers.find(c => c.face_id === insightsCustomerId);
+    if (customer) sendFeedback('skip', customer);
     dismissFocused();
   };
 
@@ -128,16 +128,18 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleCheckout = async () => {
+
+    // Submit the order to the backend first
     try {
       await apiService.submitOrder({
-        customerId: linkedCustomer?.id || 'guest',
+        face_id: linkedCustomer?.face_id || 'guest',
         orderId: linkedCustomer?.orderId || 'New',
         items: cartItems,
         total: (cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.10).toFixed(2),
         isDineIn
       });
 
-      // Send feedback alongside order (fire-and-forget, non-blocking)
+      // Then send the feedback to the backend (fire-and-forget)
       if (linkedCustomer) {
         const feedbackType = linkedCustomer.isGuest ? 'true_negative' : 'true_positive';
         sendFeedback(feedbackType, linkedCustomer, linkedCustomer.orderId);
@@ -149,9 +151,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
       if (linkedCustomer) {
         setDetectedCustomers(prev => {
-          const remaining = prev.filter(c => c.id !== linkedCustomer.id);
-          if (insightsCustomerId === linkedCustomer.id && remaining.length > 0) {
-            setInsightsCustomerId(remaining[0].id);
+          const remaining = prev.filter(c => c.face_id !== linkedCustomer.face_id);
+          if (insightsCustomerId === linkedCustomer.face_id && remaining.length > 0) {
+            setInsightsCustomerId(remaining[0].face_id);
           }
           return remaining;
         });
@@ -206,7 +208,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
           }, 4000);
 
           setDetectedCustomers(prev => {
-            if (prev.length === 0) setInsightsCustomerId(data.customer.id);
+            if (prev.length === 0) setInsightsCustomerId(data.customer.face_id);
             return [...prev, data.customer];
           });
         }
@@ -220,7 +222,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(intervalId);
   }, [isFaceRecognitionDown]);
 
-  const insightsCustomer = detectedCustomers.find(c => c.id === insightsCustomerId) || detectedCustomers[0];
+  const insightsCustomer = detectedCustomers.find(c => c.face_id === insightsCustomerId) || detectedCustomers[0];
 
   // ─── Render ─────────────────────────────────────────────────────────
   if (isLoading) {
@@ -234,7 +236,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="overflow-hidden flex h-screen w-full bg-background text-on-background">
       {/* Zone 1: Sidebar */}
-      <Sidebar onLogout={onLogout}/>
+      <Sidebar onLogout={onLogout} />
 
       {/* Main Content Area */}
       <main className="ml-24 flex-1 flex flex-col h-screen overflow-hidden">

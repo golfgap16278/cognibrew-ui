@@ -8,6 +8,8 @@ coverage/
 !.env.example
 
 # Local files
+customer.json
+menuItems.json
 cheatsheet.txt
 *.sqlite
 *.db
