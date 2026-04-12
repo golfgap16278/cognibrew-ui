@@ -5,7 +5,6 @@ type AiInsightsPanelProps = {
   detectedCustomers: Customer[];
   insightsCustomerId: string;
   isFaceRecognitionDown: boolean;
-  isRecommendationEngineDown: boolean;
   isFaceDetecting: boolean;
   menuItems: MenuItem[];
   popularItems: MenuItem[];
@@ -23,7 +22,6 @@ export default function AiInsightsPanel({
   detectedCustomers,
   insightsCustomerId,
   isFaceRecognitionDown,
-  isRecommendationEngineDown,
   isFaceDetecting,
   menuItems,
   popularItems,
@@ -88,7 +86,7 @@ export default function AiInsightsPanel({
               transition={{ duration: 0.3 }}
               className="h-full flex flex-col items-center justify-center text-stone-400 opacity-80"
             >
-              <div className="relative w-24 h-24 mb-6 flex items-center justify-center">
+              <div className="relative w-24 h-24 mb-14 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-2 border-stone-300 animate-ping opacity-20"></div>
                 <div className="absolute inset-4 rounded-full border-2 border-stone-300 animate-pulse opacity-40"></div>
                 <span className="material-symbols-outlined text-4xl text-stone-400">radar</span>
@@ -136,15 +134,17 @@ export default function AiInsightsPanel({
                           </div>
                         </div>
                         <h3 className="font-headline font-bold text-xl text-stone-400 mb-0.5 text-center">Guest</h3>
-                        <p className="text-stone-500 font-label text-[0.6875rem] text-center">Unregistered Profile</p>
+                        <p className="text-stone-500 font-label text-[0.75rem] text-center">Unregistered Profile</p>
                       </button>
 
                       {/* Guest State: Contextual Suggestion Zone */}
                       <div className="w-full space-y-2.5 text-left mt-2">
-                        {(isRecommendationEngineDown || insightsCustomer.isRecommendationDown) ? (
-                          <div className="w-full flex flex-col items-center justify-center h-[12.5rem] gap-3">
-                            <span className="material-symbols-outlined text-stone-300/60 text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_cafe</span>
-                            <span className="text-[0.5625rem] uppercase tracking-widest font-bold text-stone-300">Recommendations Unavailable</span>
+                        {insightsCustomer.isRecommendationAvailable === false ? (
+                          <div className="w-full flex flex-col h-[12.5rem] gap-2.5 pt-1">
+                            <div className="h-2.5 bg-stone-200/80 rounded-full w-28 animate-pulse mb-0.5"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse opacity-50"></div>
                           </div>
                         ) : (
                           <>
@@ -192,14 +192,16 @@ export default function AiInsightsPanel({
                           </div>
                         </div>
                         <h3 className="font-headline font-extrabold text-xl text-primary mb-0.5 text-center">{insightsCustomer.name}</h3>
-                        <p className="text-stone-500 font-label text-[0.6875rem] text-center">{insightsCustomer.status} • {(insightsCustomer.points || 0).toLocaleString()} pts</p>
+                        <p className="text-stone-500 font-label text-[0.75rem] text-center">{insightsCustomer.status} • {(insightsCustomer.points || 0).toLocaleString()} pts</p>
                       </button>
 
                       <div className="w-full space-y-2.5 text-left mt-2">
-                        {(isRecommendationEngineDown || insightsCustomer.isRecommendationDown) ? (
-                          <div className="w-full flex flex-col items-center justify-center h-[12.5rem] gap-3">
-                            <span className="material-symbols-outlined text-stone-300/60 text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_cafe</span>
-                            <span className="text-[0.5625rem] uppercase tracking-widest font-bold text-stone-300">Recommendations Unavailable</span>
+                        {insightsCustomer.isRecommendationAvailable === false ? (
+                          <div className="w-full flex flex-col h-[12.5rem] gap-2.5 pt-1">
+                            <div className="h-2.5 bg-stone-200/80 rounded-full w-28 animate-pulse mb-0.5"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse opacity-50"></div>
                           </div>
                         ) : (
                           <>

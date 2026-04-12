@@ -60,7 +60,8 @@ const customerDatabase = [
         usualSweetness: '0%',
         upsellId: 'croissant',
         greeting: '"Hey Sarah! Welcome back. Shall we get your usual Americano started, and maybe pair it with a fresh Croissant today?"',
-        phone: '1111'
+        phone: '0101',
+        isRecommendationAvailable: true
     },
     {
         face_id: 'vec_f4e8d1a6b2',
@@ -70,7 +71,8 @@ const customerDatabase = [
         rank: 'Guest',
         image: '',
         greeting: '',
-        isGuest: true
+        isGuest: true,
+        isRecommendationAvailable: true
     },
     {
         face_id: 'vec_c2d9e5f3a8',
@@ -83,7 +85,8 @@ const customerDatabase = [
         usualSweetness: '50%',
         upsellId: 'banana-bread',
         greeting: '"Hi David! The usual Latte today?"',
-        phone: '0102'
+        phone: '0102',
+        isRecommendationAvailable: true
     },
     {
         face_id: 'vec_b8a1d7c4e9',
@@ -94,7 +97,7 @@ const customerDatabase = [
         image: '',
         greeting: '',
         isGuest: true,
-        isRecommendationDown: true
+        isRecommendationAvailable: false
     },
     {
         face_id: 'vec_e6f2b5a9d3',
@@ -107,7 +110,8 @@ const customerDatabase = [
         usualSweetness: '100%',
         upsellId: 'banana-bread',
         greeting: '"Welcome back Emma! Would you like to try our Banana Bread with your Frappuccino?"',
-        phone: '0103'
+        phone: '0103',
+        isRecommendationAvailable: true
     },
     {
         face_id: 'vec_d3c7a2e8f1',
@@ -121,7 +125,7 @@ const customerDatabase = [
         upsellId: 'cheesecake',
         greeting: '"Morning Michael! Iced Americano to start the day?"',
         phone: '0104',
-        isRecommendationDown: true
+        isRecommendationAvailable: false
     }
 ].map(c => {
     // Hardcoded display values for mock data (in production, these come from the recommendation service)

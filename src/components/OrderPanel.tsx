@@ -40,10 +40,7 @@ export default function OrderPanel({
             {isDineIn ? 'DINE-IN' : 'TO-GO'}
           </button>
         </div>
-        <p className="text-xs text-stone-500">
-          Order #{linkedCustomer ? linkedCustomer.orderId : 'New'} • Staff: Alice
-
-        </p>
+        <p className="text-xs text-stone-500">Staff: Alice</p>
       </div>
 
       <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">

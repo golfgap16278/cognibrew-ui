@@ -15,7 +15,7 @@ export type Customer = {
   greeting: string;
   isGuest?: boolean;
   phone?: string;
-  isRecommendationDown?: boolean;
+  isRecommendationAvailable?: boolean;
 };
 
 export type MenuItem = {
