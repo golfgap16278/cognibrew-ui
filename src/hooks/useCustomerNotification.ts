@@ -86,21 +86,21 @@ export function useCustomerNotification(
         buffer.image = rawCustomer.image;
         buffer.isGuest = false;
         buffer.orderId = 'New';
-        console.log(buffer)
+        //console.log(buffer)
       }
 
       // -- Accumulate Component: Recommendation --
       if (inUsualOrderId !== '') {
-        buffer.usualOrderId = rawCustomer.usualOrderId;
+        buffer.usualOrderId = rawCustomer.usualOrderId?.trim();
         //buffer.usualOrder = mappedUsualOrderName;
         buffer.usualOrder = rawCustomer.usualOrder;
         buffer.usualSweetness = rawCustomer.usualSweetness;
-        buffer.upsellId = rawCustomer.upsellId;
+        buffer.upsellId = rawCustomer.upsellId?.trim();
         // buffer.upsell = mappedUpsellName;
         buffer.upsell = rawCustomer.upsell;
         buffer.greeting = rawCustomer.greeting;
         buffer.isRecommendationAvailable = true;
-        console.log(buffer)
+        //console.log(buffer)
 
       }
 
@@ -121,7 +121,7 @@ export function useCustomerNotification(
         return;
       }
 
-      // Rule B: Has CRM but NO Recommendation (Stage 2) -> Wait 50ms
+      // Rule B: Has CRM but NO Recommendation (Stage 2) -> Wait 100ms
       if (hasCRM && !hasRecommendation) {
         if (!buffer._hasFirstTimerFired) {
           if (timerRef.current[id]) clearTimeout(timerRef.current[id]);
@@ -129,7 +129,7 @@ export function useCustomerNotification(
           timerRef.current[id] = setTimeout(() => {
             buffer._hasFirstTimerFired = true;
             commit(); // Render Partial
-          }, 50);
+          }, 100);
         }
         return;
       }

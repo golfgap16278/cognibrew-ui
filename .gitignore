@@ -11,6 +11,7 @@ coverage/
 customer.json
 menuItems.json
 menuItem_old.json
+exmple_notify_payload_registered_customer.txt
 cheatsheet.txt
 *.sqlite
 *.db

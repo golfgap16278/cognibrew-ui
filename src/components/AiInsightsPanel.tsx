@@ -188,76 +188,93 @@ export default function AiInsightsPanel({
                       >
                         <div className="relative mb-2 flex justify-center">
                           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-secondary-container shadow-sm transition-colors group-hover:border-secondary-container">
-                          {insightsCustomer.image ? (
-                            <img 
-                              alt={insightsCustomer.name || 'Customer'} 
-                              className="w-full h-full object-cover" 
-                              src={`data:image/jpeg;base64,${insightsCustomer.image}`} 
-                            />
-                          ) : (
-                            /* แสดงกล่องสีเทาหรือรูป Default แทนถ้ายกเว้นไม่มีรูป */
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                              No Image
-                            </div>
-                          )}
+                            {insightsCustomer.image ? (
+                              <img
+                                alt={insightsCustomer.name || 'Customer'}
+                                className="w-full h-full object-cover"
+                                src={`data:image/jpeg;base64,${insightsCustomer.image}`}
+                              />
+                            ) : (
+                              /* แสดงกล่องสีเทาหรือรูป Default แทนถ้ายกเว้นไม่มีรูป */
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                No Image
+                              </div>
+                            )}
                           </div>
                         </div>
                         <h3 className="font-headline font-extrabold text-xl text-primary mb-0.5 text-center">{insightsCustomer.name}</h3>
                         <p className="text-stone-500 font-label text-[0.75rem] text-center">{insightsCustomer.status} • {(insightsCustomer.points || 0).toLocaleString()} pts</p>
                       </button>
 
+
                       <div className="w-full space-y-2.5 text-left mt-2">
-                        {insightsCustomer.isRecommendationAvailable === false ? (
-                          <div className="w-full flex flex-col h-[12.5rem] gap-2.5 pt-1">
-                            <div className="h-2.5 bg-stone-200/80 rounded-full w-28 animate-pulse mb-0.5"></div>
-                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
-                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
-                            <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse opacity-50"></div>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Actionable Zone: Usual Order */}
-                            {insightsCustomer.usualOrderId && menuItems.find(i => i.id === insightsCustomer.usualOrderId) && (
-                              <button
-                                onClick={() => onAddToCart(menuItems.find(i => i.id === insightsCustomer.usualOrderId)!, insightsCustomer.usualSweetness && insightsCustomer.usualSweetness !== 'Regular' ? { sweetness: insightsCustomer.usualSweetness } : {})}
-                                className="w-full bg-stone-50 p-3 rounded-2xl border border-stone-200 hover:border-primary hover:shadow-sm active:scale-[0.98] transition-all text-left group focus:outline-none"
-                              >
-                                <div className="flex justify-between items-center mb-1">
-                                  <label className="text-[0.5625rem] font-bold text-stone-400 uppercase tracking-widest cursor-pointer">Usual Order</label>
-                                  <span className="material-symbols-outlined text-[0.875rem] text-stone-300 group-hover:text-primary transition-colors">add_circle</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-primary text-sm">{insightsCustomer.usualOrderIcon}</span>
-                                  <span className="font-body font-bold text-sm text-stone-800 truncate">{insightsCustomer.usualOrder} {insightsCustomer.usualSweetness && insightsCustomer.usualSweetness !== 'Regular' ? `(${insightsCustomer.usualSweetness})` : ''}</span>
-                                </div>
-                              </button>
-                            )}
+                        <AnimatePresence mode="wait">
+                          {insightsCustomer.isRecommendationAvailable === false ? (
 
-                            {/* Actionable Zone: Upsell Suggestion */}
-                            {insightsCustomer.upsellId && menuItems.find(i => i.id === insightsCustomer.upsellId) && (
-                              <button
-                                onClick={() => onAddToCart(menuItems.find(i => i.id === insightsCustomer.upsellId)!)}
-                                className="w-full bg-primary-container p-3 rounded-2xl relative overflow-hidden shadow-sm hover:brightness-95 active:scale-[0.98] transition-all text-left group focus:outline-none border border-transparent hover:border-primary/20"
-                              >
-                                <div className="flex justify-between items-center mb-1 relative z-10">
-                                  <label className="text-[0.5625rem] font-bold text-primary-fixed uppercase tracking-widest cursor-pointer">Upsell Suggestion</label>
-                                  <span className="material-symbols-outlined text-[0.875rem] text-primary-fixed opacity-50 group-hover:opacity-100 transition-opacity">add_circle</span>
-                                </div>
-                                <div className="flex items-center gap-2 relative z-10">
-                                  <span className="material-symbols-outlined text-secondary-container text-sm">bakery_dining</span>
-                                  <span className="font-body font-bold text-sm text-white truncate">{insightsCustomer.upsell}</span>
-                                </div>
-                              </button>
-                            )}
+                            <motion.div
+                              key="recommendation-skeleton"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0, scale: 0.98 }}
+                              transition={{ duration: 0.2 }}
+                              className="w-full flex flex-col h-[12.5rem] gap-2.5 pt-1"
+                            >
+                              <div className="h-2.5 bg-stone-200/80 rounded-full w-28 animate-pulse mb-0.5"></div>
+                              <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                              <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse"></div>
+                              <div className="w-full h-[56px] bg-stone-100 rounded-2xl animate-pulse opacity-50"></div>
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="recommendation-content"
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, type: "spring", bounce: 0.2 }}
+                              className="w-full space-y-2.5"
+                            >
+                              {/* Zone: Usual Order */}
+                              {insightsCustomer.usualOrderId && menuItems.find(i => i.id === insightsCustomer.usualOrderId) && (
+                                <button
+                                  onClick={() => onAddToCart(menuItems.find(i => i.id === insightsCustomer.usualOrderId)!, insightsCustomer.usualSweetness && insightsCustomer.usualSweetness !== 'Regular' ? { sweetness: insightsCustomer.usualSweetness } : {})}
+                                  className="w-full bg-stone-50 p-3 rounded-2xl border border-stone-200 hover:border-primary hover:shadow-sm active:scale-[0.98] transition-all text-left group focus:outline-none"
+                                >
+                                  <div className="flex justify-between items-center mb-1">
+                                    <label className="text-[0.5625rem] font-bold text-stone-400 uppercase tracking-widest cursor-pointer">Usual Order</label>
+                                    <span className="material-symbols-outlined text-[0.875rem] text-stone-300 group-hover:text-primary transition-colors">add_circle</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-sm">{insightsCustomer.usualOrderIcon}</span>
+                                    <span className="font-body font-bold text-sm text-stone-800 truncate">{insightsCustomer.usualOrder} {insightsCustomer.usualSweetness && insightsCustomer.usualSweetness !== 'Regular' ? `(${insightsCustomer.usualSweetness})` : ''}</span>
+                                  </div>
+                                </button>
+                              )}
 
-                            <div className="border-l-2 border-primary-fixed pl-3 py-1">
-                              <label className="text-[0.5625rem] font-bold text-stone-400 uppercase tracking-widest block mb-1">Greeting Script</label>
-                              <p className="font-body italic text-primary text-[0.75rem] leading-relaxed line-clamp-3">
-                                {insightsCustomer.greeting}
-                              </p>
-                            </div>
-                          </>
-                        )}
+                              {/* Zone: Upsell Suggestion */}
+                              {insightsCustomer.upsellId && menuItems.find(i => i.id === insightsCustomer.upsellId) && (
+                                <button
+                                  onClick={() => onAddToCart(menuItems.find(i => i.id === insightsCustomer.upsellId)!)}
+                                  className="w-full bg-primary-container p-3 rounded-2xl relative overflow-hidden shadow-sm hover:brightness-95 active:scale-[0.98] transition-all text-left group focus:outline-none border border-transparent hover:border-primary/20"
+                                >
+                                  <div className="flex justify-between items-center mb-1 relative z-10">
+                                    <label className="text-[0.5625rem] font-bold text-primary-fixed uppercase tracking-widest cursor-pointer">Upsell Suggestion</label>
+                                    <span className="material-symbols-outlined text-[0.875rem] text-primary-fixed opacity-50 group-hover:opacity-100 transition-opacity">add_circle</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 relative z-10">
+                                    <span className="material-symbols-outlined text-secondary-container text-sm">bakery_dining</span>
+                                    <span className="font-body font-bold text-sm text-white truncate">{insightsCustomer.upsell}</span>
+                                  </div>
+                                </button>
+                              )}
+
+                              <div className="border-l-2 border-primary-fixed pl-3 py-1">
+                                <label className="text-[0.5625rem] font-bold text-stone-400 uppercase tracking-widest block mb-1">Greeting Script</label>
+                                <p className="font-body italic text-primary text-[0.75rem] leading-relaxed line-clamp-3">
+                                  {insightsCustomer.greeting}
+                                </p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
                       {/* Exception Row */}

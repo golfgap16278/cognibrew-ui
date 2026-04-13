@@ -231,7 +231,6 @@ app.get('/api/menu', async (req, res) => {
 });
 
 // Proxy: Fetch Popular Items (for Guest Recommendations)
-// จริงๆ ต้องรอรับ จาก notification service ไม่ก็ reccommendation service
 app.get('/api/popular', async (req, res) => {
     try {
 
@@ -249,39 +248,32 @@ app.get('/api/popular', async (req, res) => {
     }
 });
 
-// Proxy: Polling Detection for Mock AI Environment
-// app.get('/api/detect', async (req, res) => {
-//     try {
-//         // Cycle through customer profiles in order for predictable debugging
-//         const customer = customerDatabase[detectionIndex % customerDatabase.length];
-//         detectionIndex++;
-//         const newCustomer = {
-//             ...customer,
-//             orderId: 'New'
-//         };
-//         res.json({ customer: newCustomer });
-//     } catch (error) {
-//         res.status(500).json({ error: 'Failed to simulate detection' });
-//     }
-// });
-
 // Proxy: Submit Order
 app.post('/api/order', async (req, res) => {
     try {
-        // --- OFFLINE MODE (MOCK DATA) ---
-        // console.log('[Offline] Received order payload:', JSON.stringify(req.body, null, 2));
-        // res.json({ success: true, message: 'Order received offline!', mockOrderRef: `ORD-${Date.now()}` });
 
-        // --- ONLINE MODE (EDGE API) ---
-        // Uncomment the lines below and comment out the mock data above to connect to Edge
+        const { face_id, items } = req.body;
+        const firstItemId = (items && items.length > 0) ? items[0].menuItemId : "";
+
+        const payload = {
+            username: face_id || "guest",
+            item_id: firstItemId,
+            device_id: "unknown"
+        };
+
+        console.log('[Edge API] Sending Order Payload:', JSON.stringify(payload, null, 2));
+
         const response = await fetch(`${EDGE_API_URL}/order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(payload)
         });
+
         const data = await response.json();
         res.status(response.status).json(data);
+
     } catch (error) {
+        console.error('Error submitting order to Edge:', error);
         res.status(500).json({ error: 'Failed to submit order' });
     }
 });
@@ -310,29 +302,29 @@ app.post('/api/log-payload', async (req, res) => {
 // Proxy: Human-in-the-Loop Feedback
 app.post('/api/feedback', async (req, res) => {
     try {
-        // --- OFFLINE MODE (MOCK DATA) ---
-        const { type, face_id, customerName, isGuest, orderId } = req.body;
-        const labels: Record<string, string> = {
-            true_positive: '✅ TRUE POSITIVE',
-            true_negative: '✅ TRUE NEGATIVE',
-            false_positive: '❌ FALSE POSITIVE',
-            false_negative: '❌ FALSE NEGATIVE',
-            skip: '⏭️  SKIP',
-        };
-        const label = labels[type] || `❓ UNKNOWN (${type})`;
-        console.log(`[Feedback] ${label} | ${isGuest ? 'Guest' : customerName} (${face_id})`);
-        res.json({ success: true, message: 'Feedback received offline!' });
 
-        // --- ONLINE MODE (EDGE API) ---
-        // Uncomment the lines below and comment out the mock data above to connect to Edge
-        // const response = await fetch(`${EDGE_API_URL}/feedback`, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(req.body)
-        // });
-        // const data = await response.json();
-        // res.status(response.status).json(data);
+        //console.log('[Edge API] Sending payload:', JSON.stringify(req.body, null, 2));
+
+        const { face_id, type, customerName, isGuest, orderId, timestamp } = req.body;
+
+        const payload = {
+            feedback: type || "",
+        };
+
+        console.log('[Edge API] Sending Feedback Payload:', JSON.stringify(payload, null, 2));
+
+        const response = await fetch(`${EDGE_API_URL}/feedback/${face_id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        res.status(response.status).json(data);
+
+
     } catch (error) {
+        console.error('Error submitting feedback to Edge:', error);
         res.status(500).json({ error: 'Failed to send telemetry' });
     }
 });
