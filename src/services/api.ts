@@ -55,5 +55,25 @@ export const apiService = {
       body: JSON.stringify(feedbackData),
     });
     return res.json();
+  },
+
+  // ส่งข้อมูล Payload เพื่อ Log ใน Server
+  logPayload: async (payload: any) => {
+    const res = await fetch(`${API_BASE_URL}/log-payload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  },
+
+  // ส่งข้อมูลสถานะการเชื่อมต่อ เพื่อ Log ใน Server
+  logStatus: async (statusData: { status: string; details?: any }) => {
+    const res = await fetch(`${API_BASE_URL}/log-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(statusData),
+    });
+    return res.json();
   }
 };

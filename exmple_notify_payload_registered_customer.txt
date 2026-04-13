@@ -1,0 +1,62 @@
+The first received payload, crucial information for frontend rendering is "id" (other information is just noise). At this stage the frontend will not render "customer insight card" yet.
+   "customer": {
+    "id": "face-golfgapp-mock",
+    "name": "golfgapp",
+    "firstName": "",
+    "status": "Guest",
+    "points": 0,
+    "rank": "",
+    "image": "",
+    "usualOrderId": "",
+    "usualOrder": "",
+    "usualSweetness": "0%",
+    "upsellId": "",
+    "upsell": "",
+    "greeting": "Hey there! Take a break and treat yourself.",
+    "isGuest": false,
+    "isRecommendationDown": true,
+    "usualOrderIcon": "",
+    "orderId": ""
+  }
+
+ The second received payload from membership service, crucial information for frontend rendering is "id", "firstName", "status", "points", "image" (other information is just noise). At this stage the frontend is ready to render "customer insight card" partially. However, the frontend will wait for 50ms to see if there is any further update from the third payload from recommenation service, if the timer exceed 50ms threshold, the frontend will render the "customer insight card" partially. 
+  "customer": {
+    "id": "face-golfgapp-mock",
+    "name": "golfgapp",
+    "firstName": "Golf Gapp",
+    "status": "Gold Member",
+    "points": 4200,
+    "rank": "Gold",
+    "image": "",
+    "usualOrderId": "",
+    "usualOrder": "",
+    "usualSweetness": "0%",
+    "upsellId": "",
+    "upsell": "",
+    "greeting": "Welcome Golf Gapp! Your perfect order is just a few taps away.",
+    "isGuest": false,
+    "isRecommendationDown": true,
+    "usualOrderIcon": "",
+    "orderId": ""
+  }
+
+The third received payload from recommendation service, crucial information for frontend rendering is "id", "firstName", "status", "points", "image", "usualOrderId", "usualSweetness", "upsellId", "greeting" (other information is just noise). At this stage the frontend is either render full "customer insight card" or update the missing information in "customer insight card" based on the 50ms timer.
+  "customer": {
+    "id": "face-golfgapp-mock",
+    "name": "golfgapp",
+    "firstName": "Golf Gapp",
+    "status": "Gold Member",
+    "points": 4200,
+    "rank": "Gold",
+    "image": "",
+    "usualOrderId": "Espresso",
+    "usualOrder": "Espresso",
+    "usualSweetness": "0%",
+    "upsellId": "Butter Croissant",
+    "upsell": "Butter Croissant",
+    "greeting": "Hello Golf Gapp! Time for your Espresso? It pairs perfectly with Butter Croissant.",
+    "isGuest": false,
+    "isRecommendationDown": false,
+    "usualOrderIcon": "",
+    "orderId": ""
+  }

@@ -17,36 +17,36 @@ const SWEETNESS_LEVELS = ["0%", "25%", "50%", "100%"];
 // const MILK_TYPES = ["Whole Milk", "Oat Milk", "Almond Milk", "Soy Milk"];
 // const BEAN_TYPES = ["House Blend", "Single Origin", "Decaf"];
 
-const menuCategories = [
-    { name: 'Hot Drinks', icon: 'local_cafe' },
-    { name: 'Iced Drinks', icon: 'ac_unit' },
-    { name: 'Frappe', icon: 'blender' },
-    { name: 'Pastries', icon: 'bakery_dining' },
-    { name: 'Seasonal', icon: 'eco' },
-    { name: 'Coffee Beans', icon: 'shopping_bag' },
-];
+// const menuCategories = [
+//     { name: 'Hot Drinks', icon: 'local_cafe' },
+//     { name: 'Iced Drinks', icon: 'ac_unit' },
+//     { name: 'Frappe', icon: 'blender' },
+//     { name: 'Pastries', icon: 'bakery_dining' },
+//     { name: 'Seasonal', icon: 'eco' },
+//     { name: 'Coffee Beans', icon: 'shopping_bag' },
+// ];
 
-const menuItems = [
-    { id: '1', name: 'Latte', price: 4.50, category: 'Hot Drinks' },
-    { id: '2', name: 'Cappuccino', price: 4.50, category: 'Hot Drinks' },
-    { id: '3', name: 'Flat White', price: 4.25, category: 'Hot Drinks' },
-    { id: '4', name: 'Cortado', price: 4.00, category: 'Hot Drinks' },
-    { id: '5', name: 'Americano', price: 3.50, category: 'Hot Drinks' },
-    { id: '6', name: 'Iced Latte', price: 5.00, category: 'Iced Drinks' },
-    { id: '7', name: 'Cold Brew', price: 4.50, category: 'Iced Drinks' },
-    { id: '8', name: 'Iced Matcha', price: 5.50, category: 'Iced Drinks' },
-    { id: '15', name: 'Mocha Frappe', price: 6.00, category: 'Frappe' },
-    { id: '16', name: 'Caramel Frappe', price: 6.00, category: 'Frappe' },
-    { id: '9', name: 'Croissant', price: 3.50, category: 'Pastries' },
-    { id: '10', name: 'Blueberry Muffin', price: 3.00, category: 'Pastries' },
-    { id: '11', name: 'Pumpkin Bread', price: 4.00, category: 'Seasonal' },
-    { id: '12', name: 'Peppermint Mocha', price: 5.50, category: 'Seasonal' },
-    { id: '13', name: 'House Blend (12oz)', price: 18.00, category: 'Coffee Beans' },
-    { id: '14', name: 'Single Origin (12oz)', price: 24.00, category: 'Coffee Beans' },
-].map(item => ({
-    ...item,
-    icon: menuCategories.find(c => c.name === item.category)?.icon || 'star'
-}));
+// const menuItems = [
+//     { id: '1', name: 'Latte', price: 4.50, category: 'Hot Drinks' },
+//     { id: '2', name: 'Cappuccino', price: 4.50, category: 'Hot Drinks' },
+//     { id: '3', name: 'Flat White', price: 4.25, category: 'Hot Drinks' },
+//     { id: '4', name: 'Cortado', price: 4.00, category: 'Hot Drinks' },
+//     { id: '5', name: 'Americano', price: 3.50, category: 'Hot Drinks' },
+//     { id: '6', name: 'Iced Latte', price: 5.00, category: 'Iced Drinks' },
+//     { id: '7', name: 'Cold Brew', price: 4.50, category: 'Iced Drinks' },
+//     { id: '8', name: 'Iced Matcha', price: 5.50, category: 'Iced Drinks' },
+//     { id: '15', name: 'Mocha Frappe', price: 6.00, category: 'Frappe' },
+//     { id: '16', name: 'Caramel Frappe', price: 6.00, category: 'Frappe' },
+//     { id: '9', name: 'Croissant', price: 3.50, category: 'Pastries' },
+//     { id: '10', name: 'Blueberry Muffin', price: 3.00, category: 'Pastries' },
+//     { id: '11', name: 'Pumpkin Bread', price: 4.00, category: 'Seasonal' },
+//     { id: '12', name: 'Peppermint Mocha', price: 5.50, category: 'Seasonal' },
+//     { id: '13', name: 'House Blend (12oz)', price: 18.00, category: 'Coffee Beans' },
+//     { id: '14', name: 'Single Origin (12oz)', price: 24.00, category: 'Coffee Beans' },
+// ].map(item => ({
+//     ...item,
+//     icon: menuCategories.find(c => c.name === item.category)?.icon || 'star'
+// }));
 
 const customerDatabase = [
     {
@@ -151,8 +151,7 @@ const customerDatabase = [
     };
 });
 
-let globalOrderIdCounter = 184;
-let detectionIndex = 0;
+let cachedMenuItems: any[] = [];
 
 // Proxy: Fetch Config
 app.get('/api/config', async (req, res) => {
@@ -184,12 +183,15 @@ const categoryMapping: Record<string, string> = {
 
 app.get('/api/menu', async (req, res) => {
     try {
-        // --- OFFLINE MODE (MOCK DATA) ---
-        //res.json({ menuItems, menuCategories });
 
         // --- ONLINE MODE (EDGE API) ---
         const response = await fetch(`${EDGE_API_URL}/catalog/menu`);
         const data = await response.json();
+
+        // Replace item_id with item.name before mapping backend items
+        data.items.forEach((item: any) => {
+            item.item_id = item.name;
+        });
 
         // Map backend items → frontend MenuItem schema
         const mappedMenuItems = data.items.map((item: any) => {
@@ -218,6 +220,9 @@ app.get('/api/menu', async (req, res) => {
                 icon: categoryIcons[category] || 'star',
             }));
 
+        // Cache for /api/popular
+        cachedMenuItems = mappedMenuItems;
+
         res.json({ menuItems: mappedMenuItems, menuCategories: mappedMenuCategories });
     } catch (error) {
         console.error('Edge API offline / Error serving mock:', error);
@@ -226,21 +231,18 @@ app.get('/api/menu', async (req, res) => {
 });
 
 // Proxy: Fetch Popular Items (for Guest Recommendations)
-// รอรับจาก notification service
+// จริงๆ ต้องรอรับ จาก notification service ไม่ก็ reccommendation service
 app.get('/api/popular', async (req, res) => {
     try {
-        // --- OFFLINE MODE (MOCK DATA) ---
-        // In production, this would query the ML recommendation engine for trending items
-        const popularItemIds = ['4', '8', '9', '7']; // Cortado, Iced Matcha, Croissant, Cold Brew
-        const popularItems = popularItemIds
-            .map(id => menuItems.find(item => item.id === id))
-            .filter(Boolean);
+
+        // Grab 4 items from the cached menu deterministically
+        const deterministicIndices = [2, 7, 11, 15];
+        const popularItems = deterministicIndices
+            .map(index => cachedMenuItems[index])
+            .filter(Boolean); // Filter out undefined if the menu is smaller than the indices
+
         res.json({ popularItems });
 
-        // --- ONLINE MODE (EDGE API) ---
-        // const response = await fetch(`${EDGE_API_URL}/recommendations/popular`);
-        // const data = await response.json();
-        // res.json(data);
     } catch (error) {
         console.error('Error fetching popular items:', error);
         res.status(500).json({ error: 'Failed to fetch popular items' });
@@ -248,39 +250,60 @@ app.get('/api/popular', async (req, res) => {
 });
 
 // Proxy: Polling Detection for Mock AI Environment
-app.get('/api/detect', async (req, res) => {
-    try {
-        // Cycle through customer profiles in order for predictable debugging
-        const customer = customerDatabase[detectionIndex % customerDatabase.length];
-        detectionIndex++;
-        const newCustomer = {
-            ...customer,
-            orderId: 'New'
-        };
-        res.json({ customer: newCustomer });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to simulate detection' });
-    }
-});
+// app.get('/api/detect', async (req, res) => {
+//     try {
+//         // Cycle through customer profiles in order for predictable debugging
+//         const customer = customerDatabase[detectionIndex % customerDatabase.length];
+//         detectionIndex++;
+//         const newCustomer = {
+//             ...customer,
+//             orderId: 'New'
+//         };
+//         res.json({ customer: newCustomer });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Failed to simulate detection' });
+//     }
+// });
 
 // Proxy: Submit Order
 app.post('/api/order', async (req, res) => {
     try {
         // --- OFFLINE MODE (MOCK DATA) ---
-        console.log('[Offline] Received order payload:', JSON.stringify(req.body, null, 2));
-        res.json({ success: true, message: 'Order received offline!', mockOrderRef: `ORD-${Date.now()}` });
+        // console.log('[Offline] Received order payload:', JSON.stringify(req.body, null, 2));
+        // res.json({ success: true, message: 'Order received offline!', mockOrderRef: `ORD-${Date.now()}` });
 
         // --- ONLINE MODE (EDGE API) ---
         // Uncomment the lines below and comment out the mock data above to connect to Edge
-        // const response = await fetch(`${EDGE_API_URL}/order`, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(req.body)
-        // });
-        // const data = await response.json();
-        // res.status(response.status).json(data);
+        const response = await fetch(`${EDGE_API_URL}/order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.status(response.status).json(data);
     } catch (error) {
         res.status(500).json({ error: 'Failed to submit order' });
+    }
+});
+
+// Proxy: Log Connection Status from SignalR
+app.post('/api/log-status', async (req, res) => {
+    try {
+        const { status, details } = req.body;
+        console.log(`[SignalR Status] ${status}`, details ? details : '');
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to log status' });
+    }
+});
+
+// Proxy: Log Payload from SignalR
+app.post('/api/log-payload', async (req, res) => {
+    try {
+        console.log('[SignalR] Received Notify payload:', JSON.stringify(req.body, null, 2));
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to log payload' });
     }
 });
 

@@ -22,12 +22,15 @@ export function useDashboardData() {
       try {
         setIsLoading(true);
 
-        // เรียก API 3 ตัวพร้อมกัน
-        const [configData, menuData, popularData] = await Promise.all([
+        // ขอ hack process ตรงนี้นิดนึงนะครับ 
+        // เรียก Config และ Menu ก่อน เพื่อให้ Backend ดึง/เก็บ cache เมนูเรียบร้อย
+        const [configData, menuData] = await Promise.all([
           apiService.getConfig(),
-          apiService.getMenu(),
-          apiService.getPopular()
+          apiService.getMenu()
         ]);
+
+        // จากนั้นจึงเรียกดึง Popular โดยใช้ Cache
+        const popularData = await apiService.getPopular();
 
         // นำข้อมูล Config มาเก็บลง State
         if (configData.SWEETNESS_LEVELS) setSweetnessLevels(configData.SWEETNESS_LEVELS);

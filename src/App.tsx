@@ -6,7 +6,7 @@ import Signup from './pages/signup';
 
 export default function App() {
   // สร้าง State สำหรับเก็บสถานะการ Login (เบื้องต้นใช้ boolean ไปก่อน)
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <Router>

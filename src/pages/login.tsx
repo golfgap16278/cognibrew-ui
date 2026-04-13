@@ -16,7 +16,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
 
     try {
       // เรียก API ไปที่ Endpoint
-      const response = await fetch('http://localhost:60081/token', {
+      const response = await fetch('http://localhost:60080/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,13 +37,14 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
       // 1. เก็บ Token ไว้ใน localStorage เพื่อเอาไปแนบ Header ในการเรียก API อื่นๆ ภายหลัง
       if (data.access_token) {
         localStorage.setItem('access_token', data.access_token);
+        console.log('Access Token:', data.access_token); // สำหรับ manual test service อื่นๆ ครับ
       }
 
       console.log('Login success!');
-      
+
       // 2. อัปเดตสถานะใน App.tsx ว่า Login ผ่านแล้ว
       onLogin();
-      
+
       // 3. เปลี่ยนหน้าไปที่ Dashboard
       navigate('/dashboard');
 
@@ -62,7 +63,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
           <span className="material-symbols-outlined text-[3rem] text-primary mb-2">coffee_maker</span>
           <h1 className="font-headline font-bold text-2xl text-stone-800">Welcome to CogniBrew</h1>
         </div>
-        
+
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           {/* แสดง Error Message ถ้ามี */}
           {error && (
@@ -89,15 +90,15 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
             disabled={isLoading}
             required
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             className="mt-4 p-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
           >
             {isLoading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-        
+
         <p className="text-center mt-6 text-sm text-stone-500">
           Don't have an account? <Link to="/signup" className="text-primary font-bold hover:underline">Sign up</Link>
         </p>

@@ -1,6 +1,5 @@
 export type Customer = {
   face_id: string;
-  orderId: string;
   name: string;
   status: string;
   points: number;
@@ -8,14 +7,15 @@ export type Customer = {
   image: string;
   usualOrder: string;
   usualOrderIcon: string;
-  usualOrderId?: string;
-  usualSweetness?: string;
+  usualOrderId: string;
+  usualSweetness: string;
   upsell: string;
-  upsellId?: string;
+  upsellId: string;
   greeting: string;
-  isGuest?: boolean;
-  phone?: string;
-  isRecommendationAvailable?: boolean;
+  isGuest: boolean;
+  phone: string;
+  isRecommendationAvailable: boolean;
+  orderId: string;
 };
 
 export type MenuItem = {

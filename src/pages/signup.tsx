@@ -9,7 +9,7 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('User'); // ตั้งค่าเริ่มต้นเป็น Barista
   const [password, setPassword] = useState('');
-  
+
   // State สำหรับจัดการ UX
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
 
     try {
       // เรียก API ไปที่ Endpoint
-      const response = await fetch('http://localhost:60081/user', {
+      const response = await fetch('http://localhost:60080/user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,14 +41,14 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
       }
 
       console.log('Signup success!');
-      
+
       // เรียก onSignup ถ้ามีการส่ง prop นี้มา
       if (onSignup) {
         onSignup();
       }
-      
+
       // เมื่อสมัครสำเร็จ ให้พากลับไปหน้า Login
-      navigate('/login'); 
+      navigate('/login');
 
     } catch (err: any) {
       console.error('Signup error:', err);
@@ -65,7 +65,7 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
           <span className="material-symbols-outlined text-[3rem] text-primary mb-2">coffee_maker</span>
           <h1 className="font-headline font-bold text-2xl text-stone-800">Create Account</h1>
         </div>
-        
+
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           {/* แสดง Error Message ถ้ามี */}
           {error && (
@@ -129,15 +129,15 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
             required
           />
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             className="mt-4 p-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
           >
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
-        
+
         <p className="text-center mt-6 text-sm text-stone-500">
           Already have an account? <Link to="/login" className="text-primary font-bold hover:underline">Log in</Link>
         </p>

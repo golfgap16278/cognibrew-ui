@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import type { Customer, MenuItem, Category, CartItem, Feedback } from '../types';
 import { apiService } from '../services/api';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useCustomerNotification } from '../hooks/useCustomerNotification';
 
 import Sidebar from '../components/Sidebar';
 import AiInsightsPanel from '../components/AiInsightsPanel';
@@ -10,15 +11,6 @@ import MenuPanel from '../components/MenuPanel';
 import OrderPanel from '../components/OrderPanel';
 import CustomizeModal from '../components/CustomizeModal';
 import MembershipModal from '../components/MembershipModal';
-
-// ฟังก์ชันสำหรับคำนวณน้ำหนักข้อมูล
-const calculateDataWeight = (data: any) => {
-  if (!data) return 0;
-  console.log(data);
-  return Object.values(data).filter(
-    (value) => value !== null && value !== undefined && value !== ''
-  ).length;
-};
 
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   // ─── State ──────────────────────────────────────────────────────────
@@ -51,6 +43,23 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   useEffect(() => {
     menuItemsRef.current = menuItems;
   }, [menuItems]);
+
+  const updateCustomerList = useCallback((newCustomer: Customer) => {
+    setDetectedCustomers((prev) => {
+      const existingIndex = prev.findIndex((c) => c.face_id === newCustomer.face_id);
+      if (existingIndex !== -1) {
+        const updatedList = [...prev];
+        updatedList[existingIndex] = { ...prev[existingIndex], ...newCustomer };
+        return updatedList;
+      }
+      return [...prev, newCustomer];
+    });
+  }, []);
+
+  const { processPayload } = useCustomerNotification(
+    menuItemsRef.current,
+    updateCustomerList,
+  );
 
   // ─── Callbacks ──────────────────────────────────────────────────────
 
@@ -180,27 +189,6 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   // ─── Effects ────────────────────────────────────────────────────────
 
-  /*
-  useEffect(() => {
-    const connection = new HubConnectionBuilder()
-      .withUrl('http://192.168.1.50:8000/inferenceHub')
-      .withAutomaticReconnect()
-      .configureLogging(LogLevel.Information)
-      .build();
-
-    connection.on('FaceDetected', (data) => {
-      const customerId = data.customerId;
-      console.log('FaceDetected event received for customerId:', customerId);
-    });
-
-    connection.start().catch((error) => console.error('SignalR Connection Error: ', error));
-
-    return () => {
-      connection.stop();
-    };
-  }, []);
-  */
-
   useEffect(() => {
     if (isFaceRecognitionDown) return;
 
@@ -215,68 +203,39 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
       .withAutomaticReconnect()
       .build();
 
-    // 2. ฟังก์ชันจัดการเมื่อได้รับข้อมูลจาก SignalR
+    // 2. ฟังก์ชันจัดการเมื่อได้รับข้อมูลจาก SignalR เพื่อให้ UI แสดงผลได้ถูกต้อง
     connection.on("Notify", (payload) => {
-      const rawCustomer = payload.customer;
-      if (!rawCustomer || (!rawCustomer.id && !rawCustomer.face_id)) return;
+      // ส่ง Payload กลับไปให้ Server ช่วยรับ Log (Fire and Forget)
+      apiService.logPayload(payload).catch(err => console.error("Failed to log payload:", err));
 
-      // แปลงโครงสร้างข้อมูล (Mapping) เพื่อให้ React นำไปใช้ได้อย่างถูกต้อง
-      const newCustomer = {
-        ...rawCustomer,
-        face_id: rawCustomer.id || rawCustomer.face_id, // บังคับให้มี face_id เสมอเพื่อเอาไปทำ Key
-        usualOrderId: menuItemsRef.current.find(x => x.name.trim().toLowerCase() === rawCustomer.usualOrder?.trim().toLowerCase())?.id || null,
-        upsellId: menuItemsRef.current.find(x => x.name.trim().toLowerCase() === rawCustomer.upsell?.trim().toLowerCase())?.id || null,
-      };
-
-      const customerId = newCustomer.face_id;
-
-      // แสดงสถานะการตรวจจับ (คง Logic เดิมไว้)
-      setIsFaceDetecting(true);
-      if (faceDetectionTimerRef.current) {
-        clearTimeout(faceDetectionTimerRef.current);
+      if (payload && payload.customer) {
+        processPayload(payload.customer);
       }
-      faceDetectionTimerRef.current = setTimeout(() => {
-        setIsFaceDetecting(false);
-        faceDetectionTimerRef.current = null;
-      }, 4000);
+    });
 
-      // Logic การอัปเดตข้อมูล
-      setDetectedCustomers((prev) => {
-        const existingIndex = prev.findIndex(
-          (c) => (c.id || c.face_id) === customerId
-        );
+    // เพิ่ม Event listeners for connection state changes ส่งกลับ Proxy Server สำหรับ debug
+    connection.onreconnecting(error => {
+      apiService.logStatus({ status: 'Reconnecting', details: error?.message }).catch(() => { });
+    });
 
-        const newWeight = calculateDataWeight(newCustomer);
+    connection.onreconnected(connectionId => {
+      apiService.logStatus({ status: 'Reconnected', details: { connectionId } }).catch(() => { });
+    });
 
-        if (existingIndex !== -1) {
-          const existingWeight = calculateDataWeight(prev[existingIndex]);
-
-          if (newWeight >= existingWeight) {
-            const updatedList = [...prev];
-            
-            // นำข้อมูลใหม่มาทับเฉพาะฟิลด์ที่ไม่ใช่ null หรือ undefined
-            const cleanedNewCustomer = Object.fromEntries(
-              Object.entries(newCustomer).filter(([_, v]) => v !== null && v !== undefined && v !== "")
-            );
-
-            updatedList[existingIndex] = { 
-              ...prev[existingIndex], 
-              ...cleanedNewCustomer // ทับเฉพาะค่าที่มีประโยชน์ ค่าเก่าจะไม่หาย
-            };
-            return updatedList;
-          }
-          return prev;
-        }
-
-        // ลบ setInsightsCustomerId ออกจากตรงนี้
-        return [...prev, newCustomer];
-      });
+    connection.onclose(error => {
+      apiService.logStatus({ status: 'Disconnected', details: error?.message }).catch(() => { });
     });
 
     // 3. เริ่มการเชื่อมต่อ
     connection.start()
-      .then(() => console.log("SignalR Connected to Hub"))
-      .catch((err) => console.error("SignalR Connection Error: ", err));
+      .then(() => {
+        console.log("SignalR Connected to Hub");
+        apiService.logStatus({ status: 'Connected' }).catch(() => { });
+      })
+      .catch((err) => {
+        console.error("SignalR Connection Error: ", err);
+        apiService.logStatus({ status: 'Connection Error', details: err?.message }).catch(() => { });
+      });
 
     // Cleanup เมื่อ Component ถูกทำลาย
     return () => {
