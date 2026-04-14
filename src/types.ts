@@ -21,6 +21,7 @@ export type Customer = {
 export type MenuItem = {
   id: string;
   name: string;
+  name_old: string;
   price: number;
   category: string;
   icon: string;

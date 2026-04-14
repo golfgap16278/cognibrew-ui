@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AUTH_API_URL } from '../services/api';
 
 // ปรับ onSignup ให้เป็น optional (?) เผื่อใน App.tsx ไม่ได้ส่งค่ามาจะได้ไม่ error
 export default function Signup({ onSignup }: { onSignup?: () => void }) {
@@ -22,7 +23,7 @@ export default function Signup({ onSignup }: { onSignup?: () => void }) {
 
     try {
       // เรียก API ไปที่ Endpoint
-      const response = await fetch('http://localhost:60080/user', {
+      const response = await fetch(`${AUTH_API_URL}/user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

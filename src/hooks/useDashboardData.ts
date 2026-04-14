@@ -39,6 +39,7 @@ export function useDashboardData() {
         if (configData.customerDatabase) setCustomerDatabase(configData.customerDatabase);
 
         // นำข้อมูล Menu มาเก็บลง State
+        localStorage.setItem('menu_items', JSON.stringify(menuData.menuItems));
         if (menuData.menuItems) setMenuItems(menuData.menuItems);
         if (menuData.menuCategories) setMenuCategories(menuData.menuCategories);
 

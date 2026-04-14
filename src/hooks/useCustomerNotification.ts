@@ -63,18 +63,29 @@ export function useCustomerNotification(
       }
       const buffer = bufferRef.current[id];
 
+      const menu_items = JSON.parse(localStorage.getItem('menu_items') || '[]') as MenuItem[];
+
       // Extraction Helpers
       const inFirstName = rawCustomer.firstName || '';
       const inUsualOrderId = rawCustomer.usualOrderId || '';
+      const inUsualOrderName = rawCustomer.usualOrder || '';
 
-      const mappedUsualOrderName = inUsualOrderId
-        ? menuItems.find((x) => x.id.trim().toLowerCase() === inUsualOrderId.trim().toLowerCase())?.name || null
-        : null;
 
-      const inUpsellId = rawCustomer.upsellId || '';
-      const mappedUpsellName = inUpsellId
-        ? menuItems.find((x) => x.id.trim().toLowerCase() === inUpsellId.trim().toLowerCase())?.name || null
-        : null;
+      // const mappedUsualOrderName = inUsualOrderId
+      //   ? menuItems.find((x) => x.id.trim().toLowerCase() === inUsualOrderId.trim().toLowerCase())?.name || null
+      //   : null;
+
+      const mappedUsualOrderId = menu_items?.find((x) => x.name_old === inUsualOrderName)?.id || null
+
+      //const inUpsellId = rawCustomer.upsellId || '';
+
+      const inUpsellName = rawCustomer.upsell || '';
+
+      // const mappedUpsellName = inUpsellId
+      //   ? menuItems.find((x) => x.id.trim().toLowerCase() === inUpsellId.trim().toLowerCase())?.name || null
+      //   : null;
+
+      const mappedUpsellId = menu_items?.find((x) => x.name_old === inUpsellName)?.id || null
 
       // -- Accumulate Component: CRM Identity --
       // (Only merge if it has real CRM data, prevents Out-Of-Order noise from overwriting it)
@@ -91,12 +102,10 @@ export function useCustomerNotification(
 
       // -- Accumulate Component: Recommendation --
       if (inUsualOrderId !== '') {
-        buffer.usualOrderId = rawCustomer.usualOrderId?.trim();
-        //buffer.usualOrder = mappedUsualOrderName;
+        buffer.usualOrderId = mappedUsualOrderId;
         buffer.usualOrder = rawCustomer.usualOrder;
         buffer.usualSweetness = rawCustomer.usualSweetness;
-        buffer.upsellId = rawCustomer.upsellId?.trim();
-        // buffer.upsell = mappedUpsellName;
+        buffer.upsellId = mappedUpsellId;
         buffer.upsell = rawCustomer.upsell;
         buffer.greeting = rawCustomer.greeting;
         buffer.isRecommendationAvailable = true;

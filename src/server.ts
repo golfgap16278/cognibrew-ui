@@ -189,12 +189,18 @@ app.get('/api/menu', async (req, res) => {
         const data = await response.json();
 
         // Replace item_id with item.name before mapping backend items
-        data.items.forEach((item: any) => {
-            item.item_id = item.name;
-        });
+        // if (!data.items) {
+        //    throw new Error(data.detail || 'Menu items not found from Edge API');
+        // }
+
+        // data.items.forEach((item: any) => {
+        //     item.item_id = item.name;
+        // });
 
         // Map backend items → frontend MenuItem schema
         const mappedMenuItems = data.items.map((item: any) => {
+
+            const name_old = item.name;
             let itemName = item.name;
             const isHot = itemName.endsWith(' (Hot)') || item.category === 'Hot';
             const isCold = itemName.endsWith(' (Cold)') || item.category === 'Cold';
@@ -207,6 +213,7 @@ app.get('/api/menu', async (req, res) => {
             return {
                 id: item.item_id,
                 name: itemName,
+                name_old: name_old,
                 price: item.price,
                 category: categoryMapping[item.category] || item.category,
                 icon: categoryIcons[item.category] || 'star',
@@ -263,9 +270,14 @@ app.post('/api/order', async (req, res) => {
 
         console.log('[Edge API] Sending Order Payload:', JSON.stringify(payload, null, 2));
 
+        // Forward Authorization header from the UI request to the gateway
+        const authHeader = req.headers['authorization'];
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (authHeader) headers['Authorization'] = authHeader as string;
+
         const response = await fetch(`${EDGE_API_URL}/order`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(payload)
         });
 
@@ -313,9 +325,14 @@ app.post('/api/feedback', async (req, res) => {
 
         console.log('[Edge API] Sending Feedback Payload:', JSON.stringify(payload, null, 2));
 
+        // Forward Authorization header from the UI request to the gateway
+        const authHeader = req.headers['authorization'];
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (authHeader) headers['Authorization'] = authHeader as string;
+
         const response = await fetch(`${EDGE_API_URL}/feedback/${face_id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'PUT',
+            headers,
             body: JSON.stringify(payload)
         });
 

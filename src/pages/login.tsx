@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AUTH_API_URL } from '../services/api';
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   // UI ยังให้ผู้ใช้กรอก Email แต่ตอนส่ง API จะแมปไปที่ key 'username'
@@ -16,7 +17,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
 
     try {
       // เรียก API ไปที่ Endpoint
-      const response = await fetch('http://localhost:60080/token', {
+      const response = await fetch(`${AUTH_API_URL}/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

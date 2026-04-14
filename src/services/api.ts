@@ -1,8 +1,9 @@
 // src/services/api.ts
 import type { Feedback } from '../types';
 
-const API_BASE_URL = 'http://localhost:3002/api';
-const HUB_API = 'http://localhost:5010/chatHub';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname}:3002/api`;
+const HUB_API = import.meta.env.VITE_HUB_API || `http://${window.location.hostname}:5010/chatHub`;
+export const AUTH_API_URL = import.meta.env.VITE_AUTH_API_URL || `http://${window.location.hostname}:60080`;
 
 export const apiService = {
   getHubEndpoint: () => {
@@ -39,9 +40,13 @@ export const apiService = {
 
   // ส่งข้อมูล Order
   submitOrder: async (orderData: any) => {
+    const token = localStorage.getItem('access_token');
     const res = await fetch(`${API_BASE_URL}/order`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(orderData),
     });
     return res.json();
@@ -49,9 +54,13 @@ export const apiService = {
 
   // ส่งข้อมูล Feedback ให้ AI
   sendFeedback: async (feedbackData: Feedback) => {
+    const token = localStorage.getItem('access_token');
     const res = await fetch(`${API_BASE_URL}/feedback`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(feedbackData),
     });
     return res.json();
